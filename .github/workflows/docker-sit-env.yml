@@ -3,8 +3,7 @@ name: "HANA PDF Container [SIT]"
 on:
   push:
     branches:
-      - fe/master
-      - be/master
+      - docker/master
 
 jobs:
   api_build_image:
