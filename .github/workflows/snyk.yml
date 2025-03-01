@@ -1,0 +1,38 @@
+name: Snyk
+
+on:
+  push:
+    branches:
+      - be/master
+
+permissions:
+  contents: read
+
+env:
+  SNYK_ORGANIZATION: ${{ secrets.SNYK_ORGANIZATION }}
+  SNYK_PROJECT: ${{ secrets.SNYK_PROJECT }}
+
+jobs:
+  snyk:
+    name: Run Snyk to check for vulnerabilities
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/php@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --sarif-file-output=snyk.sarif
+      - name: snyk monitor
+        run: snyk monitor --file=composer.lock --org=$SNYK_ORGANIZATION --project-name=$SNYK_PROJECT --remote-repo-url=https://github.com/Nicklas373/Hana-PDF --target-reference="be/master"
+        continue-on-error: true
+      - name: snyk code test
+        run: snyk test --file=composer.lock --org=$SNYK_ORGANIZATION --project-name=$SNYK_PROJECT --remote-repo-url=https://github.com/Nicklas373/Hana-PDF --target-reference="be/master"
+        continue-on-error: true
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk.sarif
