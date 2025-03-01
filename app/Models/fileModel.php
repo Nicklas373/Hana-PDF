@@ -5,28 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class mergeModel extends Model
+class fileModel extends Model
 {
     use HasFactory;
 
     protected $connection = 'pgsql';
-    protected $table = 'pdfMerge';
-    protected $primaryKey = 'mergeId';
+    protected $primaryKey = 'fileId';
+    protected $table = 'filePool';
     protected $keyType = 'string';
 
     protected $fillable = [
+        'fileId',
         'fileName',
         'fileSize',
-        'result',
-        'isBatch',
         'isDeleted',
-        'batchName',
         'fileId',
-        'groupId',
         'processId',
-        'deletedAt',
-        'procStartAt',
-        'procEndAt',
-        'procDuration'
+        'isDeleted',
+        'deletedAt'
     ];
 }

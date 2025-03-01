@@ -31,19 +31,20 @@ abstract class Controller
         }
     }
 
-    protected function returnDataMesage($status, $message, $data, $groupId, $notification, $errors)
+    protected function returnDataMessage($status, $message, $app, $data, $file, $groupId, $errors)
     {
         return response()->json([
             'status' => $status,
             'message'=> $message,
+            'app' => $app,
             'data' => $data,
+            'file' => $file,
             'groupId' => $groupId,
-            'notification' => $notification,
             'errors' => $errors
         ], $status);
     }
 
-    protected function returnFileMesage($status, $message, $files, $errors)
+    protected function returnFileMessage($status, $message, $files, $errors)
     {
         return response()->json([
             'status' => $status,

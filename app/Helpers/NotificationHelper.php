@@ -46,21 +46,20 @@ class NotificationHelper
 
         $CurrentTime = AppHelper::instance()->getCurrentTimeZone();
         $uuid = AppHelper::Instance()->generateUniqueUuid(notifyLogModel::class, 'processId');
-        $message = "<b>HANA API Alert</b>
-                    \nStatus: <b>".$status."</b>".
-                    "\nStart At: <b>".$CurrentTime.
-                    "</b>\nEnvironment: <b>".env('APP_ENV').
-                    "\n\n</b>Services: <b>Backend Services</b>".
-                    "\nSource: <b>https://gw.hana-ci.com</b>".
-                    "\nEndpoint: <b>".$newRoute.
-                    "</b>\n\nProcess: <b>".$proc.
-                    "</b>\nGroup Id: <b>".$processId.
-                    "</b>\nType: <b>Process Error</b>".
-                    "\n\nFilename: <b>".$newProcFile.
-                    "</b>\nFileSize: <b>".$newFileSize.
-                    "</b>\n\nError Reason: <b>".$errReason.
-                    "</b>\nError Log: <pre><code>".$errCode.
-                    "</code></pre>";
+        $message = "<b>HANA API Alert</b>".
+                    "\n\nStatus: <b>".$status."</b>".
+                    "\nStart At: <b>".$CurrentTime."</b>".
+                    "\nEnvironment: <b>".env('APP_ENV')."</b>".
+                    "\n\nServices: <b>Backend Services</b>".
+                    "\nSource: <b>".env('APP_URL')."</b>".
+                    "\nEndpoint: <b>".$newRoute."</b>".
+                    "\n\nProcess: <b>".$proc."</b>".
+                    "\nGroup Id: <b>".$processId."</b>".
+                    "\nType: <b>Process Error</b>".
+                    "\n\nFilename: <b>".$newProcFile."</b>".
+                    "\nFileSize: <b>".$newFileSize."</b>".
+                    "\n\nError Reason: <b>".$errReason."</b>".
+                    "\nError Log: <pre><code>".$errCode."</code></pre>";
         try {
             $response = Telegram::sendMessage([
                 'chat_id' => env('TELEGRAM_CHAT_ID'),
@@ -118,15 +117,14 @@ class NotificationHelper
         $uuid = AppHelper::Instance()->generateUniqueUuid(notifyLogModel::class, 'processId');
         $message = "<b>HANA API Alert</b>
                     \nStatus: <b>".$status."</b>".
-                    "\nStart At: <b>".$CurrentTime.
-                    "</b>\nEnvironment: <b>".env('APP_ENV').
-                    "\n\n</b>Services: <b>Backend Services</b>".
-                    "\nSource: <b>https://gw.hana-ci.com</b>".
-                    "\nGroup Id: <b>".$processId.
-                    "</b>\n\nError Type: <b>Route Error</b>".
-                    "\nError Reason: <b>".$errReason.
-                    "</b>\nError Log: <pre><code>".$errCode.
-                    "</code></pre>";
+                    "\nStart At: <b>".$CurrentTime."</b>".
+                    "\nEnvironment: <b>".env('APP_ENV')."</b>".
+                    "\n\nServices: <b>Backend Services</b>".
+                    "\nSource: <b>".env('APP_URL')."</b>".
+                    "\nGroup Id: <b>".$processId."</b>".
+                    "\n\nError Type: <b>Route Error</b>".
+                    "\nError Reason: <b>".$errReason."</b>".
+                    "\nError Log: <pre><code>".$errCode."</code></pre>";
         try {
             $response = Telegram::sendMessage([
                 'chat_id' => env('TELEGRAM_CHAT_ID'),
@@ -184,17 +182,16 @@ class NotificationHelper
         $uuid = AppHelper::Instance()->generateUniqueUuid(notifyLogModel::class, 'processId');
         $message = "<b>HANA API Alert</b>
                     \nStatus: <b>".$status."</b>".
-                    "\nStart At: <b>".$CurrentTime.
-                    "</b>\nEnvironment: <b>".env('APP_ENV').
-                    "\n\n</b>Services: <b>Backend Services</b>".
-                    "\nSource: <b>https://gw.hana-ci.com</b>".
-                    "\nJobs Name: <b>".$schedName.
-                    "</b>\n\nProcess: <b>".$schedRuntime.
-                    "</b>\nGroup Id: <b>".$processId.
-                    "</b>\nType: <b>Jobs Error</b>".
-                    "\n\nError Reason: <b>".$errReason.
-                    "</b>\nError Log: <pre><code>".$errCode.
-                    "</code></pre>";
+                    "\nStart At: <b>".$CurrentTime."</b>".
+                    "\nEnvironment: <b>".env('APP_ENV')."</b>".
+                    "\n\nServices: <b>Backend Services</b>".
+                    "\nSource: <b>".env('APP_URL')."</b>".
+                    "\nJobs Name: <b>".$schedName."</b>".
+                    "\n\nProcess: <b>".$schedRuntime."</b>".
+                    "\nGroup Id: <b>".$processId."</b>".
+                    "\nType: <b>Jobs Error</b>".
+                    "\n\nError Reason: <b>".$errReason."</b>".
+                    "\nError Log: <pre><code>".$errCode."</code></pre>";
         try {
             $response = Telegram::sendMessage([
                 'chat_id' => env('TELEGRAM_CHAT_ID'),
@@ -257,11 +254,11 @@ class NotificationHelper
             $CountTotalScsProc = $compTotalScs + $cnvTotalScs + $htmlTotalScs + $mergeTotalScs + $splitTotalScs + $watermarkTotalScs;
             $CountTotalErrProc = $compTotalErr + $cnvTotalErr + $htmlTotalErr + $mergeTotalErr + $splitTotalErr + $watermarkTotalErr;
             $message = "<b>HANA API Daily Report Alert</b>".
-                        "\n\nReported At: <b>".$CurrentTime.
-                        "</b>\nReport Status: <b>Success".
-                        "</b>\nEnvironment: <b>".env('APP_ENV').
-                        "</b>\nServices: <b>Backend Services</b>".
-                        "\nSource: <b>https://gw.hana-ci.com</b>".
+                        "\n\nReported At: <b>".$CurrentTime."</b>".
+                        "\nReport Status: <b>Success"."</b>".
+                        "\nEnvironment: <b>".env('APP_ENV')."</b>".
+                        "\nServices: <b>Backend Services</b>".
+                        "\nSource: <b>".env('APP_URL')."</b>".
                         "\n\n<b>Compress Task\n</b>Success: <b>".$compTotalScs."</b>\nError: <b>".$compTotalErr."</b>".
                         "\n\n<b>Convert Task\n</b>Success: <b>".$cnvTotalScs."</b>\nError: <b>".$cnvTotalErr."</b>".
                         "\n\n<b>HTMLtoPDF Task\n</b>Success: <b>".$htmlTotalScs."</b>\nError: <b>".$htmlTotalErr."</b>".
@@ -271,14 +268,13 @@ class NotificationHelper
                         "\n\n<b>Total Task\n</b>Success: <b>".$CountTotalScsProc."</b>\nError: <b>".$CountTotalErrProc."</b>";
         } else {
             $message = "<b>HANA API Daily Report Alert</b>".
-                        "\n\nReported At: <b>".$CurrentTime.
-                        "</b>\nReport Status: <b>FAIL".
-                        "</b>\nEnvironment: <b>".env('APP_ENV').
-                        "</b>\nServices: <b>Backend Services</b>".
-                        "\nSource: <b>https://gw.hana-ci.com</b>".
-                        "\n\nError Reason: <b>".$errReason.
-                        "</b>\nError Log: <pre><code>".$errCode.
-                        "</code></pre>";
+                        "\n\nReported At: <b>".$CurrentTime."</b>".
+                        "\nReport Status: <b>FAIL"."</b>".
+                        "\nEnvironment: <b>".env('APP_ENV')."</b>".
+                        "\nServices: <b>Backend Services</b>".
+                        "\nSource: <b>".env('APP_URL')."</b>".
+                        "\n\nError Reason: <b>".$errReason."</b>".
+                        "\nError Log: <pre><code>".$errCode."</code></pre>";
         }
         try {
             $response = Telegram::sendMessage([
@@ -337,17 +333,16 @@ class NotificationHelper
         $uuid = AppHelper::Instance()->generateUniqueUuid(notifyLogModel::class, 'processId');
         $message = "<b>HANA API Alert</b>
                     \nStatus: <b>".$status."</b>".
-                    "\nStart At: <b>".$CurrentTime.
-                    "</b>\nEnvironment: <b>".env('APP_ENV').
-                    "\n\n</b>Services: <b>Backend Services</b>".
-                    "\nSource: <b>https://gw.hana-ci.com</b>".
-                    "\nEndpoint: <b>".$processEndpoint.
-                    "</b>\n\nProcess: <b>".$processName.
-                    "</b>\nGroup Id: <b>".$processId.
-                    "</b>\nType: <b>Universal Notify</b>".
-                    "\n\nError Reason: <b>".$errReason.
-                    "</b>\nError Log: <pre><code>".$errCode.
-                    "</code></pre>";
+                    "\nStart At: <b>".$CurrentTime."</b>".
+                    "\nEnvironment: <b>".env('APP_ENV')."</b>".
+                    "\n\nServices: <b>Backend Services</b>".
+                    "\nSource: <b>".env('APP_URL')."</b>".
+                    "\nEndpoint: <b>".$processEndpoint."</b>".
+                    "\n\nProcess: <b>".$processName."</b>".
+                    "\nGroup Id: <b>".$processId."</b>".
+                    "\nType: <b>Universal Notify</b>".
+                    "\n\nError Reason: <b>".$errReason."</b>".
+                    "\nError Log: <pre><code>".$errCode."</code></pre>";
         try {
             $response = Telegram::sendMessage([
                 'chat_id' => env('TELEGRAM_CHAT_ID'),
@@ -403,23 +398,22 @@ class NotificationHelper
     function sendVersioningErrNotify($versioningFE, $versioningGitFE, $versioningBE , $versioningGitBE, $status, $processId, $errReason, $errCode) {
         $CurrentTime = AppHelper::instance()->getCurrentTimeZone();
         $uuid = AppHelper::Instance()->generateUniqueUuid(notifyLogModel::class, 'processId');
-        $message = "<b>HANA API Alert</b>
-                    \nStatus: <b>".$status."</b>".
-                    "\nStart At: <b>".$CurrentTime.
-                    "</b>\nEnvironment: <b>".env('APP_ENV').
-                    "\n\n</b>Services: <b>Backend Services</b>".
-                    "\nSource: <b>https://gw.hana-ci.com</b>".
+        $message = "<b>HANA API Alert</b>".
+                    "\nStatus: <b>".$status."</b>".
+                    "\nStart At: <b>".$CurrentTime."</b>".
+                    "\nEnvironment: <b>".env('APP_ENV')."</b>".
+                    "\n\nServices: <b>Backend Services</b>".
+                    "\nSource: <b>".env('APP_URL')."</b>".
                     "\nEndpoint: <b>api/v1/version</b>".
-                    "\n\nProcess: <b>Versioning".
-                    "</b>\nGroup Id: <b>".$processId.
-                    "</b>\nType: <b>Versioning Check</b>".
-                    "\n\nBE Version: <b>".$versioningBE.
-                    "</b>\nBE Version GIT: <b>".$versioningGitBE.
-                    "</b>\nFE Version: <b>".$versioningFE.
-                    "</b>\nFE Version GIT: <b>".$versioningGitFE.
-                    "\n\n</b>Error Reason: <b>".$errReason.
-                    "</b>\nError Log: <pre><code>".$errCode.
-                    "</code></pre>";
+                    "\n\nProcess: <b>Versioning</b>".
+                    "\nGroup Id: <b>".$processId."</b>".
+                    "\nType: <b>Versioning Check</b>".
+                    "\n\nBE Version: <b>".$versioningBE."</b>".
+                    "\nBE Version GIT: <b>".$versioningGitBE."</b>".
+                    "\nFE Version: <b>".$versioningFE."</b>".
+                    "\nFE Version GIT: <b>".$versioningGitFE."</b>".
+                    "\n\nError Reason: <b>".$errReason."</b>".
+                    "\nError Log: <pre><code>".$errCode."</code></pre>";
         try {
             $response = Telegram::sendMessage([
                 'chat_id' => env('TELEGRAM_CHAT_ID'),

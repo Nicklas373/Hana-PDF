@@ -26,9 +26,12 @@ class splitModel extends Model
         'action',
         'result',
         'isBatch',
+        'isDeleted',
+        'fileId',
         'batchName',
         'groupId',
         'processId',
+        'deletedAt',
         'procStartAt',
         'procEndAt',
         'procDuration'

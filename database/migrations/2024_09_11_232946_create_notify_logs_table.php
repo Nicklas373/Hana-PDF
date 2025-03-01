@@ -24,7 +24,7 @@ return new class extends Migration
             $table->char('notifyName', length: 25);
             $table->boolean('notifyResult');
             $table->text('notifyMessage')->nullable();
-            $table->json('notifyResponse')->nullable();
+            $table->text('notifyResponse')->nullable();
             $table->timestamp('created_at')->nullable()->useCurrent()->useCurrentOnUpdate();
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
 

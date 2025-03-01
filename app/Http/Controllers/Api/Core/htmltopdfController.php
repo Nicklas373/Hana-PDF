@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Core;
 use App\Helpers\AppHelper;
 use App\Helpers\NotificationHelper;
 use App\Models\appLogModel;
+use App\Models\fileModel;
 use App\Models\htmlModel;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
@@ -20,7 +21,7 @@ class htmltopdfController extends Controller
 {
     public function html(Request $request) {
         $validator = Validator::make($request->all(),[
-		    'urlToPDF' => 'required',
+		    'urlToPDF' => ['required', 'string'],
             'urlMarginValue' => ['required', 'numeric'],
             'urlSizeValue' => ['required', 'in:A3,A4,A5,Letter'],
             'urlPageOrientationValue' => ['required', 'in:landscape,portrait'],
@@ -30,6 +31,7 @@ class htmltopdfController extends Controller
         // Generate Uni UUID
         $uuid = AppHelper::Instance()->generateUniqueUuid(htmlModel::class, 'processId');
         $batchId = AppHelper::Instance()->generateUniqueUuid(htmlModel::class, 'groupId');
+        $fileUuid = AppHelper::Instance()->generateUniqueUuid(fileModel::class, 'processId');
 
         // Carbon timezone
         date_default_timezone_set('Asia/Jakarta');
@@ -52,12 +54,13 @@ class htmltopdfController extends Controller
                 'Validation failed',
                 $validator->messages()->first()
             );
-            return $this->returnDataMesage(
+            return $this->returnDataMessage(
                 400,
                 'Validation failed',
                 null,
-                $batchId,
                 null,
+                null,
+                $batchId,
                 $validator->messages()->first()
             );
 		} else {
@@ -72,6 +75,12 @@ class htmltopdfController extends Controller
             $pdfSize = $request->post('urlSizeValue');
             $pdfSinglePage = $request->post('urlSinglePage');
             $newUrl = '';
+            AppHelper::instance()->fileModelHelper($pdfDefaultFileName.'.pdf', null, $fileUuid, $batchId, false, null);
+            $fileId = fileModel::where('fileName', '=', $pdfDefaultFileName)
+                                ->where('isDeleted', '=', false)
+                                ->where('processId', '=', $fileUuid)
+                                ->first()
+                                ->fileId;
             appLogModel::create([
                 'processId' => $uuid,
                 'groupId' => $batchId,
@@ -85,8 +94,11 @@ class htmltopdfController extends Controller
                 'urlSinglePage' => $pdfSinglePage,
                 'urlSize' => $pdfSize,
                 'result' => false,
+                'isDeleted' => false,
+                'fileId' => $fileId,
                 'groupId' => $batchId,
                 'processId' => $uuid,
+                'deletedAt' => null,
                 'procStartAt' => $startProc,
                 'procEndAt' => null,
                 'procDuration' => null
@@ -114,18 +126,19 @@ class htmltopdfController extends Controller
                             'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
                             'procDuration' => $duration->s.' seconds'
                         ]);
-                    return $this->returnDataMesage(
+                    return $this->returnDataMessage(
                         400,
                         'HTML To PDF failed !',
-                        $pdfUrl,
-                        $batchId,
                         null,
+                        null,
+                        null,
+                        $batchId,
                         'Webpage are not available or not valid: '.$pdfUrl
                     );
                 }
             }
-            if (Storage::disk('local')->exists('public/'.$pdfProcessed_Location.'/'.$pdfDefaultFileName)) {
-                Storage::disk('local')->delete('public/'.$pdfProcessed_Location.'/'.$pdfDefaultFileName);
+            if (Storage::disk('local')->exists($pdfProcessed_Location.'/'.$pdfDefaultFileName)) {
+                Storage::disk('local')->delete($pdfProcessed_Location.'/'.$pdfDefaultFileName);
             }
             try {
                 $ilovepdfTask = new HtmlpdfTask(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
@@ -142,7 +155,7 @@ class htmltopdfController extends Controller
                 }
                 $ilovepdfTask->setOutputFileName($pdfDefaultFileName);
                 $ilovepdfTask->execute();
-                $ilovepdfTask->download(Storage::disk('local')->path('public/'.$pdfProcessed_Location));
+                $ilovepdfTask->download(Storage::disk('local')->path($pdfProcessed_Location));
             } catch (\Exception $e) {
                 $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                 $duration = $end->diff($startProc);
@@ -166,32 +179,38 @@ class htmltopdfController extends Controller
                     'iLovePDF API Error !, Catch on Exception',
                     $e->getMessage()
                 );
-                return $this->returnDataMesage(
+                return $this->returnDataMessage(
                     400,
                     'HTML To PDF failed !',
-                    $e->getMessage(),
-                    $batchId,
                     null,
+                    $e->getMessage(),
+                    null,
+                    $batchId,
                     'iLovePDF API Error !, Catch on Exception'
                 );
             }
-            if (Storage::disk('local')->exists('public/'.$pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf')) {
+            if (Storage::disk('local')->exists($pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf')) {
                 $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                 $duration = $end->diff($startProc);
                 Storage::disk('minio')->put(
                     $pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf',
-                    Storage::disk('local')->get('public/'.$pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf')
+                    Storage::disk('local')->get($pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf')
                 );
-                Storage::disk('local')->delete('public/'.$pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf');
+                Storage::disk('local')->delete($pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf');
                 $fileProcSize = Storage::disk('minio')->size($pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf');
                 appLogModel::where('groupId', '=', $batchId)
-                    ->update([
-                        'errReason' => null,
-                        'errStatus' => null
-                    ]);
+                            ->update([
+                                'errReason' => null,
+                                'errStatus' => null
+                            ]);
+                fileModel::where('fileId', '=', $fileId)
+                            ->update([
+                                'fileSize' => $fileProcSize
+                            ]);
                 htmlModel::where('groupId', '=', $batchId)
                     ->update([
                         'result' => true,
+                        'fileId' => $fileId,
                         'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
                         'procDuration' => $duration->s.' seconds'
                     ]);
@@ -232,12 +251,13 @@ class htmltopdfController extends Controller
                     'Failed to download file from iLovePDF API !',
                     null
                 );
-                return $this->returnDataMesage(
+                return $this->returnDataMessage(
                     400,
                     'HTML To PDF failed !',
                     null,
-                    $batchId,
                     null,
+                    null,
+                    $batchId,
                     'Failed to download file from iLovePDF API !'
                 );
             }

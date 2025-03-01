@@ -24,6 +24,8 @@ $cleanSessionUUIDProc = AppHelper::Instance()->generateUniqueUuid(jobLogModel::c
 $cleanSessionUUIDGroup = AppHelper::Instance()->generateUniqueUuid(jobLogModel::class, 'groupId');
 $cleanStorageUUIDProc = AppHelper::Instance()->generateUniqueUuid(jobLogModel::class, 'processId');
 $cleanStorageUUIDGroup = AppHelper::Instance()->generateUniqueUuid(jobLogModel::class, 'groupId');
+$minioFileUUIDProc = AppHelper::Instance()->generateUniqueUuid(jobLogModel::class, 'processId');
+$minioFileUUIDGroup = AppHelper::Instance()->generateUniqueUuid(jobLogModel::class, 'groupId');
 
 // Carbon timezone
 date_default_timezone_set('Asia/Jakarta');
@@ -408,6 +410,61 @@ Schedule::command('hana:clean-session')
                 'hana:daily-session',
                 'every 15 minutes',
                 $cleanSessionUUIDGroup,
+                'FAIL',
+                'Laravel Scheduler Error !',
+                $output
+            );
+        }
+    });
+
+Schedule::command('hana:minio-cleanup')
+    ->hourly()
+    ->environments(env('APP_ENV'))
+    ->timezone('Asia/Jakarta')
+    ->before(function(AppHelper $helper) use($minioFileUUIDProc, $minioFileUUIDGroup, $startProc) {
+        appLogModel::create([
+            'processId' => $minioFileUUIDProc,
+            'groupId' => $minioFileUUIDGroup,
+            'errReason' => null,
+            'errStatus' => null
+        ]);
+        jobLogModel::create([
+            'jobsName' => 'hana:minio-cleanup',
+            'jobsEnv' => env('APP_ENV'),
+            'jobsRuntime' => 'every 1 hours',
+            'jobsResult' => false,
+            'groupId' => $minioFileUUIDGroup,
+            'processId' => $minioFileUUIDProc,
+            'procStartAt' => $startProc
+        ]);
+    })
+    ->after(function(AppHelper $helper, Stringable $output) use($minioFileUUIDProc, $minioFileUUIDGroup, $startProc)  {
+        $start = Carbon::parse($startProc);
+        $end =  Carbon::parse($helper::instance()->getCurrentTimeZone());
+        $duration = $end->diff($start);
+        if ($output == null || $output == '' || empty($output) || str_contains($output, 'successfully')) {
+            jobLogModel::where('processId', '=', $minioFileUUIDProc)
+            ->update([
+                'jobsResult' => true,
+                'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
+                'procDuration' => $duration->s.' seconds'
+            ]);
+        } else {
+            appLogModel::where('processId', '=', $minioFileUUIDProc)
+            ->update([
+                'errReason' => $output,
+                'errStatus' => 'Laravel Scheduler Error !',
+            ]);
+            jobLogModel::where('processId', '=', $minioFileUUIDProc)
+                ->update([
+                    'jobsResult' => false,
+                    'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
+                    'procDuration' => $duration->s.' seconds'
+                ]);
+            NotificationHelper::Instance()->sendSchedErrNotify(
+                'hana:minio-cleanup',
+                'every 1 hours',
+                $minioFileUUIDGroup,
                 'FAIL',
                 'Laravel Scheduler Error !',
                 $output

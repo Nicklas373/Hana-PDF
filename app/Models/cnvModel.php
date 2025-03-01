@@ -21,9 +21,12 @@ class cnvModel extends Model
         'imgExtract',
         'result',
         'isBatch',
+        'isDeleted',
         'batchName',
+        'fileId',
         'groupId',
         'processId',
+        'deletedAt',
         'procStartAt',
         'procEndAt',
         'procDuration'

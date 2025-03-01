@@ -21,8 +21,11 @@ class htmlModel extends Model
         'urlSinglePage',
         'urlSize',
         'result',
+        'fileId',
         'groupId',
         'processId',
+        'isDeleted',
+        'deletedAt',
         'procStartAt',
         'procEndAt',
         'procDuration'

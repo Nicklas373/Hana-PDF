@@ -28,13 +28,20 @@ return new class extends Migration
 
             // Configure foreign keys
             $table->foreign('processId')->references('processId')->on('pdfCompress')->name('pdf_compress_fk');
+            $table->foreign('groupId')->references('groupId')->on('pdfCompress')->name('pdf_group_compress_fk');
             $table->foreign('processId')->references('processId')->on('pdfMerge')->name('pdf_merge_fk');
+            $table->foreign('groupId')->references('groupId')->on('pdfMerge')->name('pdf_group_merge_fk');
             $table->foreign('processId')->references('processId')->on('pdfSplit')->name('pdf_split_fk');
+            $table->foreign('groupId')->references('groupId')->on('pdfSplit')->name('pdf_group_split_fk');
             $table->foreign('processId')->references('processId')->on('pdfCnv')->name('pdf_cnv_fk');
+            $table->foreign('groupId')->references('groupId')->on('pdfCnv')->name('pdf_group_cnv_fk');
             $table->foreign('processId')->references('processId')->on('pdfWatermark')->name('pdf_watermark_fk');
+            $table->foreign('groupId')->references('groupId')->on('pdfWatermark')->name('pdf_group_watermark_fk');
             $table->foreign('processId')->references('processId')->on('pdfHtml')->name('pdf_html_fk');
+            $table->foreign('groupId')->references('groupId')->on('pdfHtml')->name('pdf_group_html_fk');
             $table->foreign('processId')->references('processId')->on('jobLogs')->name('job_logs_fk');
             $table->foreign('processId')->references('processId')->on('notifyLogs')->name('notify_logs_fk');
+            $table->foreign('processId')->references('processId')->on('fileModel')->name('file_model_fk');
         });
     }
 
