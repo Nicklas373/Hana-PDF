@@ -41,7 +41,6 @@ return new class extends Migration
 
             // Configure foreign key
             $table->foreign('processId')->references('processId')->on('appLogs');
-            $table->foreign('groupId')->references('groupId')->on('appLogs');
             $table->foreign('fileId')->references('fileId')->on('filePool');
         });
     }
