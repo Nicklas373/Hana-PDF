@@ -29,8 +29,8 @@ const options = {
 const adobeClientID = "STATIC_CLIENT_ID";
 const appMajorVer = 3;
 const appMinorVer = 4;
-const appPatchVer = 4;
-const apiUrl = "http://192.168.0.2";
+const appPatchVer = 6;
+const apiUrl = "STATIC_API";
 const bearerToken = "STATIC_BEARER";
 const errModal = new Modal($errModal, options);
 const googleViewerUrl = "https://docs.google.com/viewerng/viewer?url=";
@@ -844,6 +844,39 @@ if (uploadDropzoneAlt) {
                                 ".dz-image-thumbnail"
                             ).src = "/assets/icons/placeholder_pptx.svg";
                         });
+                } else if (file.type.startsWith("image/")) {
+                    getTemporaryURL(fileNameFormat(file.name))
+                        .then(function (temporaryURL) {
+                            file.previewElement
+                                .querySelector("#loadingThumbnail")
+                                .classList.add("hidden");
+                            file.previewElement
+                                .querySelector("#imgThumbnail")
+                                .classList.remove("hidden");
+                            var newUrl = temporaryURL.temporaryURL;
+                            file.previewElement.querySelector(
+                                ".dz-image-thumbnail"
+                            ).src = newUrl;
+                        })
+                        .catch(function (temporaryURL) {
+                            file.previewElement
+                                .querySelector("#loadingThumbnail")
+                                .classList.add("hidden");
+                            file.previewElement
+                                .querySelector("#imgThumbnail")
+                                .classList.remove("hidden");
+                            file.previewElement.querySelector(
+                                ".dz-image-thumbnail"
+                            ).src = "/assets/icons/placeholder_pptx.svg";
+                            errMessage.innerText = `Failed to generated thumbnail for ${file.name}`;
+                            errSubMessage.innerText = "";
+                            errListTitleMessage.innerText = "Error message";
+                            resetErrListMessage();
+                            generateMesssage(temporaryURL.temporaryError);
+                            errAltSubMessageModal.style = null;
+                            previewDocumentModal.hide();
+                            errModal.show();
+                        });
                 }
             });
 
@@ -883,43 +916,6 @@ if (uploadDropzoneAlt) {
                 errAltSubMessageModal.style = null;
                 loadingModal.hide();
                 errModal.show();
-            });
-
-            this.on("thumbnail", function (file) {
-                if (file.type.startsWith("image/")) {
-                    getTemporaryURL(fileNameFormat(file.name))
-                        .then(function (temporaryURL) {
-                            file.previewElement
-                                .querySelector("#loadingThumbnail")
-                                .classList.add("hidden");
-                            file.previewElement
-                                .querySelector("#imgThumbnail")
-                                .classList.remove("hidden");
-                            var newUrl = temporaryURL.temporaryURL;
-                            file.previewElement.querySelector(
-                                ".dz-image-thumbnail"
-                            ).src = newUrl;
-                        })
-                        .catch(function (temporaryURL) {
-                            file.previewElement
-                                .querySelector("#loadingThumbnail")
-                                .classList.add("hidden");
-                            file.previewElement
-                                .querySelector("#imgThumbnail")
-                                .classList.remove("hidden");
-                            file.previewElement.querySelector(
-                                ".dz-image-thumbnail"
-                            ).src = "/assets/icons/placeholder_pptx.svg";
-                            errMessage.innerText = `Failed to generated thumbnail for ${file.name}`;
-                            errSubMessage.innerText = "";
-                            errListTitleMessage.innerText = "Error message";
-                            resetErrListMessage();
-                            generateMesssage(temporaryURL.temporaryError);
-                            errAltSubMessageModal.style = null;
-                            previewDocumentModal.hide();
-                            errModal.show();
-                        });
-                }
             });
 
             this.on("timeout", function (file) {
@@ -1358,34 +1354,59 @@ function checkImageExtensions(url) {
 }
 
 function generatePdfThumbnail(file) {
-    const fileReader = new FileReader();
-    fileReader.onload = function () {
-        const typedArray = new Uint8Array(this.result);
-        pdfjsLib.getDocument(typedArray).promise.then(function (pdf) {
-            pdf.getPage(1).then(function (page) {
-                const canvas = document.createElement("canvas");
-                const ctx = canvas.getContext("2d");
-                const viewport = page.getViewport({ scale: 0.5 });
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
+    return new Promise((resolve, reject) => {
+        const fileReader = new FileReader();
 
-                const renderContext = {
-                    canvasContext: ctx,
-                    viewport: viewport,
-                };
+        fileReader.onload = function () {
+            try {
+                const typedArray = new Uint8Array(this.result);
 
-                page.render(renderContext).promise.then(function () {
-                    const thumbnail = canvas.toDataURL("image/jpeg");
-                    const previewElement = file.previewElement;
-                    const dzImage = previewElement.querySelector(
-                        ".dz-image-thumbnail"
-                    );
-                    dzImage.src = thumbnail;
-                });
-            });
-        });
-    };
-    fileReader.readAsArrayBuffer(file);
+                pdfjsLib
+                    .getDocument(typedArray)
+                    .promise.then(function (pdf) {
+                        return pdf.getPage(1);
+                    })
+                    .then(function (page) {
+                        const canvas = document.createElement("canvas");
+                        const ctx = canvas.getContext("2d");
+                        const viewport = page.getViewport({ scale: 0.5 });
+
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+
+                        const renderContext = {
+                            canvasContext: ctx,
+                            viewport: viewport,
+                        };
+
+                        page.render(renderContext)
+                            .promise.then(function () {
+                                const thumbnail =
+                                    canvas.toDataURL("image/jpeg");
+                                const previewElement = file.previewElement;
+                                const dzImage = previewElement.querySelector(
+                                    ".dz-image-thumbnail"
+                                );
+                                dzImage.src = thumbnail;
+                            })
+                            .catch((error) => {
+                                reject(error);
+                            });
+                    })
+                    .catch((error) => {
+                        reject(error);
+                    });
+            } catch (error) {
+                reject(error);
+            }
+        };
+
+        fileReader.onerror = function (error) {
+            reject(error);
+        };
+
+        fileReader.readAsArrayBuffer(file);
+    });
 }
 
 function getUploadedFileName() {
@@ -1399,7 +1420,7 @@ function fetchVersion() {
         xhr.open("GET", `${apiUrl}/api/v1/version/fetch`, true);
         xhr.setRequestHeader("Authorization", "Bearer " + bearerToken);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Accept", "application/json; charset=utf-8");
 
         xhr.onload = () => {
             try {
@@ -1475,7 +1496,7 @@ function generateThumbnail(fileName) {
         xhr.open("POST", `${apiUrl}/api/v1/file/thumbnail`, true);
         xhr.setRequestHeader("Authorization", "Bearer " + bearerToken);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Accept", "application/json; charset=utf-8");
         xhr.onload = () => {
             try {
                 const xhrReturn = JSON.parse(xhr.responseText);
@@ -1491,12 +1512,12 @@ function generateThumbnail(fileName) {
                     );
                 }
             } catch (e) {
-                new Error(`Error parsing JSON: ${e}`);
+                reject(new Error(`Error parsing JSON: ${e}`));
             }
         };
 
         xhr.onerror = () => {
-            new Error("Network error occurred");
+            reject(new Error("Network error occurred"));
         };
 
         xhr.send(formData);
@@ -1507,12 +1528,12 @@ function getTemporaryURL(fileName) {
     return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
         var formData = new FormData();
-        formData.append("fileName", fileName.replace(/\s/g, "_"));
+        formData.append("file", fileName.replace(/\s/g, "_"));
 
         xhr.open("POST", `${apiUrl}/api/v1/file/getTemporaryURL`, true);
         xhr.setRequestHeader("Authorization", "Bearer " + bearerToken);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Accept", "application/json; charset=utf-8");
 
         xhr.onload = () => {
             try {
@@ -1568,7 +1589,7 @@ function getTotalPages(fileName) {
         xhr.open("POST", `${apiUrl}/api/v2/pdf/getTotalPagesPDF`, true);
         xhr.setRequestHeader("Authorization", "Bearer " + bearerToken);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Accept", "application/json; charset=utf-8");
 
         xhr.onload = () => {
             try {
@@ -1621,7 +1642,7 @@ function remainingBalance() {
         xhr.open("GET", `${apiUrl}/api/v1/ilovepdf/limit`, true);
         xhr.setRequestHeader("Authorization", `Bearer ${bearerToken}`);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Accept", "application/json; charset=utf-8");
 
         xhr.onload = () => {
             try {
@@ -1686,7 +1707,7 @@ function sendToAPI(files, proc, action) {
         xhr.open("POST", apiUrl + "/api/v2/pdf/" + proc, true);
         xhr.setRequestHeader("Authorization", "Bearer " + bearerToken);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Accept", "application/json; charset=utf-8");
 
         xhr.onload = () => {
             handleResponseSTA(xhr, proc, resolve, reject);
@@ -1912,9 +1933,8 @@ function scsInterfaceSTA(xhrReturn, proc) {
     document.getElementById("scsMsgTitle").innerText =
         "HANA PDF has processed your document!";
     if (proc == "compress" && xhrTotalUploads == 1) {
-        document.getElementById("scsMsgResult").innerHTML = `
-        Compressed to <b>${xhrReturn.newFileSize}</b> with <b>${xhrReturn.compMethod}</b> compression level.
-    `;
+        document.getElementById("scsMsgResult").textContent = `
+        Compressed to ${xhrReturn.newFileSize} with ${xhrReturn.compMethod} compression level.`;
     } else {
         document.getElementById(
             "scsMsgResult"
@@ -2368,6 +2388,36 @@ function submit(event) {
                                                     "#A84E4E";
                                                 loadingModal.hide();
                                                 errModal.show();
+                                            }
+                                            if (
+                                                parseInt(
+                                                    document.getElementById(
+                                                        "fromPage"
+                                                    ).value
+                                                ) == 0 ||
+                                                parseInt(
+                                                    document.getElementById(
+                                                        "toPage"
+                                                    ).value
+                                                ) == 0
+                                            ) {
+                                                event.preventDefault();
+                                                errMessage.innerText =
+                                                    "Invalid page number range!";
+                                                errListTitleMessage.innerText =
+                                                    "Error message";
+                                                errAltSubMessageModal.style =
+                                                    null;
+                                                resetErrListMessage();
+                                                generateMesssage(
+                                                    "First or last page can't be empty or zero"
+                                                );
+                                                firstPage.style.borderColor =
+                                                    "#A84E4E";
+                                                lastPage.style.borderColor =
+                                                    "#A84E4E";
+                                                loadingModal.hide();
+                                                errModal.show();
                                             } else {
                                                 if (
                                                     xhrBalance &&
@@ -2504,7 +2554,7 @@ function submit(event) {
                     if (cusPage) {
                         var cusPageValue =
                             document.getElementById("customPageSplit").value;
-                        if (!isNaN(cusPageValue)) {
+                        if (!Number.isNaN(cusPageValue)) {
                             getTotalPages(
                                 getUploadedFileName()[0].replace(/\s/g, "_")
                             )
@@ -2536,6 +2586,23 @@ function submit(event) {
                                             resetErrListMessage();
                                             generateMesssage(
                                                 "Custom page can not be more than total page"
+                                            );
+                                            customPage.style.borderColor =
+                                                "#A84E4E";
+                                            loadingModal.hide();
+                                            errModal.show();
+                                        } else if (
+                                            parseInt(cusPageValue) == 0
+                                        ) {
+                                            event.preventDefault();
+                                            errMessage.innerText =
+                                                "Invalid page number range!";
+                                            errListTitleMessage.innerText =
+                                                "Error message";
+                                            errAltSubMessageModal.style = null;
+                                            resetErrListMessage();
+                                            generateMesssage(
+                                                "Custom page can not be empty or zero"
                                             );
                                             customPage.style.borderColor =
                                                 "#A84E4E";
@@ -2675,7 +2742,7 @@ function submit(event) {
                 if (cusPage) {
                     var cusPageValue =
                         document.getElementById("customPageDelete").value;
-                    if (!isNaN(cusPageValue)) {
+                    if (!Number.isNaN(cusPageValue)) {
                         getTotalPages(
                             getUploadedFileName()[0].replace(/\s/g, "_")
                         )
@@ -2707,6 +2774,21 @@ function submit(event) {
                                         resetErrListMessage();
                                         generateMesssage(
                                             "Custom page can not be more than total page"
+                                        );
+                                        customPage.style.borderColor =
+                                            "#A84E4E";
+                                        loadingModal.hide();
+                                        errModal.show();
+                                    } else if (parseInt(cusPageValue) == 0) {
+                                        event.preventDefault();
+                                        errMessage.innerText =
+                                            "Invalid page number range!";
+                                        errListTitleMessage.innerText =
+                                            "Error message";
+                                        errAltSubMessageModal.style = null;
+                                        resetErrListMessage();
+                                        generateMesssage(
+                                            "Custom page can not be empty or zero"
                                         );
                                         customPage.style.borderColor =
                                             "#A84E4E";
@@ -2882,7 +2964,7 @@ function submit(event) {
                                     document.getElementById(
                                         "watermarkPageImage"
                                     ).value;
-                                if (!isNaN(cusPageValue)) {
+                                if (!Number.isNaN(cusPageValue)) {
                                     getTotalPages(
                                         getUploadedFileName()[0].replace(
                                             /\s/g,
@@ -2921,6 +3003,24 @@ function submit(event) {
                                                     resetErrListMessage();
                                                     generateMesssage(
                                                         "Selected page can not be more than total page"
+                                                    );
+                                                    customPage.style.borderColor =
+                                                        "#A84E4E";
+                                                    loadingModal.hide();
+                                                    errModal.show();
+                                                } else if (
+                                                    parseInt(cusPageValue) == 0
+                                                ) {
+                                                    event.preventDefault();
+                                                    errMessage.innerText =
+                                                        "Invalid page number range!";
+                                                    errListTitleMessage.innerText =
+                                                        "Error message";
+                                                    errAltSubMessageModal.style =
+                                                        null;
+                                                    resetErrListMessage();
+                                                    generateMesssage(
+                                                        "Selected page can not be empty or zero"
                                                     );
                                                     customPage.style.borderColor =
                                                         "#A84E4E";
@@ -3095,7 +3195,7 @@ function submit(event) {
                         loadingModal.show();
                         var cusPageValue =
                             document.getElementById("watermarkPageText").value;
-                        if (!isNaN(cusPageValue)) {
+                        if (!Number.isNaN(cusPageValue)) {
                             getTotalPages(
                                 getUploadedFileName()[0].replace(/\s/g, "_")
                             )
@@ -3127,6 +3227,23 @@ function submit(event) {
                                             resetErrListMessage();
                                             generateMesssage(
                                                 "Selected page can not be more than total page"
+                                            );
+                                            customPage.style.borderColor =
+                                                "#A84E4E";
+                                            loadingModal.hide();
+                                            errModal.show();
+                                        } else if (
+                                            parseInt(cusPageValue) == 0
+                                        ) {
+                                            event.preventDefault();
+                                            errMessage.innerText =
+                                                "Invalid page number range!";
+                                            errListTitleMessage.innerText =
+                                                "Error message";
+                                            errAltSubMessageModal.style = null;
+                                            resetErrListMessage();
+                                            generateMesssage(
+                                                "Selected page can not be empty or zero"
                                             );
                                             customPage.style.borderColor =
                                                 "#A84E4E";
@@ -3342,7 +3459,7 @@ function validateVersion() {
         xhr.open("POST", `${apiUrl}/api/v1/version/check`, true);
         xhr.setRequestHeader("Authorization", "Bearer " + bearerToken);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Accept", "application/json; charset=utf-8");
 
         xhr.onload = () => {
             try {
