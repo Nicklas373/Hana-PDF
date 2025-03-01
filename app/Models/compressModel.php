@@ -21,9 +21,12 @@ class compressModel extends Model
         'compMethod',
         'result',
         'isBatch',
+        'isDeleted',
         'batchName',
+        'fileId',
         'groupId',
         'processId',
+        'deletedAt',
         'procStartAt',
         'procEndAt',
         'procDuration'

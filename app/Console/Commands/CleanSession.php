@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
 use App\Helpers\AppHelper;
 use App\Helpers\NotificationHelper;
@@ -39,8 +38,6 @@ class CleanSession extends Command
                 DB::table('sessions')
                     ->where('ip_address', 'NOT LIKE', '172.18.0.%')
                     ->delete();
-
-                Log::info($sessionCount . ' sessions have been removed');
             } catch (QueryException $e) {
                 NotificationHelper::Instance()->sendErrGlobalNotify(
                     'Console Command',

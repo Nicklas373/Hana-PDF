@@ -6,12 +6,12 @@ use App\Helpers\AppHelper;
 use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\appLogModel;
+use App\Models\fileModel;
 use App\Models\watermarkModel;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\LOG;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Ilovepdf\Ilovepdf;
@@ -20,8 +20,21 @@ class watermarkController extends Controller
 {
     public function watermark(Request $request) {
         $validator = Validator::make($request->all(),[
-            'file' => '',
-            'imgFile' => '',
+           'file' => [
+                'required',
+                'array'
+            ],
+            'file.*' => [
+                'required',
+                'string',
+                'regex:/\.pdf/i'
+            ],
+            'imgFile' => [
+                'sometimes',
+                'nullable',
+                'image',
+                'max:5120'
+            ],
             'action' => ['required', 'in:img,txt'],
             'wmFontColor' => ['nullable','regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'],
             'wmFontSize' => ['nullable', 'numeric'],
@@ -38,6 +51,7 @@ class watermarkController extends Controller
         // Generate Uni UUID
         $uuid = AppHelper::Instance()->generateUniqueUuid(watermarkModel::class, 'processId');
         $batchId = AppHelper::Instance()->generateUniqueUuid(watermarkModel::class, 'groupId');
+        $fileUuid = AppHelper::Instance()->generateUniqueUuid(fileModel::class, 'processId');
 
         // Carbon timezone
         date_default_timezone_set('Asia/Jakarta');
@@ -60,12 +74,13 @@ class watermarkController extends Controller
                 'Validation failed',
                 $validator->messages()->first()
             );
-            return $this->returnDataMesage(
+            return $this->returnDataMessage(
                 400,
                 'Validation failed',
                 null,
-                $batchId,
                 null,
+                null,
+                $batchId,
                 $validator->messages()->first()
             );
 		} else {
@@ -83,42 +98,17 @@ class watermarkController extends Controller
                     $currentFileName = basename($file);
                     $trimPhase1 = str_replace(' ', '_', $currentFileName);
                     $newFileNameWithoutExtension = str_replace('.', '_', $trimPhase1);
-                    $newFilePath = Storage::disk('local')->path('public/'.$pdfUpload_Location.'/'.$trimPhase1);
-                    try {
-                        if (Storage::disk('minio')->exists($pdfUpload_Location.'/'.$trimPhase1)) {
-                            array_push($altPoolFiles, $newFileNameWithoutExtension);
-                        }
-                    } catch (\Exception $e) {
+                    $newFilePath = Storage::disk('local')->path($pdfUpload_Location.'/'.$trimPhase1);
+                    if (Storage::disk('minio')->exists($pdfUpload_Location.'/'.$trimPhase1)) {
+                        array_push($altPoolFiles, $newFileNameWithoutExtension);
+                    } else {
                         $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                         $duration = $end->diff($startProc);
                         appLogModel::create([
                             'processId' => $procUuid,
                             'groupId' => $batchId,
-                            'errReason' => $e->getMessage(),
+                            'errReason' => null,
                             'errStatus' => $currentFileName.' could not be found in the object storage'
-                        ]);
-                        watermarkModel::create([
-                            'fileName' => $currentFileName,
-                            'fileSize' => null,
-                            'watermarkFontFamily' => null,
-                            'watermarkFontStyle' => null,
-                            'watermarkFontSize' => null,
-                            'watermarkFontTransparency' => null,
-                            'watermarkImage' => null,
-                            'watermarkLayout' => null,
-                            'watermarkMosaic' => null,
-                            'watermarkRotation' => null,
-                            'watermarkStyle' => null,
-                            'watermarkText' => null,
-                            'watermarkPage' => null,
-                            'result' => false,
-                            'isBatch' => $batchValue,
-                            'batchName' => null,
-                            'groupId' => $batchId,
-                            'processId' => $procUuid,
-                            'procStartAt' => $startProc,
-                            'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
-                            'procDuration' =>  $duration->s.' seconds'
                         ]);
                         NotificationHelper::Instance()->sendErrNotify(
                             $currentFileName,
@@ -127,14 +117,15 @@ class watermarkController extends Controller
                             'FAIL',
                             'watermark',
                             $currentFileName.' could not be found in the object storage',
-                            $e->getMessage()
+                            null
                         );
-                        return $this->returnDataMesage(
+                        return $this->returnDataMessage(
                             400,
                             'PDF Watermark failed !',
                             null,
-                            $batchId,
                             null,
+                            null,
+                            $batchId,
                             $currentFileName.' could not be found in the object storage'
                         );
                     }
@@ -148,6 +139,10 @@ class watermarkController extends Controller
                         $procUuid = AppHelper::Instance()->generateUniqueUuid(watermarkModel::class, 'processId');
                         $newFileSize = AppHelper::instance()->convert($fileSize, "MB");
                         $watermarkAction = $request->post('action');
+                        $fileId = fileModel::where('fileName', '=', $trimPhase1)
+                                            ->where('isDeleted', '=', false)
+                                            ->first()
+                                            ->fileId;
                         appLogModel::create([
                             'processId' => $procUuid,
                             'groupId' => $batchId,
@@ -170,15 +165,18 @@ class watermarkController extends Controller
                             'watermarkPage' => null,
                             'result' => false,
                             'isBatch' => $batchValue,
+                            'isDeleted' => false,
                             'batchName' => $randomizePdfFileName.'.pdf',
+                            'fileId' => $fileId,
                             'groupId' => $batchId,
                             'processId' => $procUuid,
+                            'deletedAt' => null,
                             'procStartAt' => $startProc,
                             'procEndAt' => null,
                             'procDuration' => null
                         ]);
-                        if (Storage::disk('local')->exists('public/'.$pdfDownload_Location.'/'.$newFileNameWithoutExtension.'.pdf')) {
-                            Storage::disk('local')->delete('public/'.$pdfDownload_Location.'/'.$newFileNameWithoutExtension.'.pdf');
+                        if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFileNameWithoutExtension.'.pdf')) {
+                            Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFileNameWithoutExtension.'.pdf');
                         }
                         if ($watermarkAction == 'img') {
                             $watermarkImage = $request->file('imgFile');
@@ -203,12 +201,13 @@ class watermarkController extends Controller
                                     'PDF Watermark failed !',
                                     'Image file for watermark can not be empty !'
                                 );
-                                return $this->returnDataMesage(
+                                return $this->returnDataMessage(
                                     400,
                                     'PDF Watermark failed !',
                                     null,
-                                    $batchId,
                                     null,
+                                    null,
+                                    $batchId,
                                     'Image file for watermark can not be empty !'
                                 );
                             } else {
@@ -217,15 +216,19 @@ class watermarkController extends Controller
                                 $newImageNameWithoutExtension = str_replace('.', '_', $trimImagePhase1);
                                 $randomizeImageExtension = pathinfo($watermarkImage->getClientOriginalName(), PATHINFO_EXTENSION);
                                 $wmImageName = $newImageNameWithoutExtension.'.'.$randomizeImageExtension;
-                                Storage::disk('local')->put('public/'.$pdfUpload_Location.'/'.$wmImageName, file_get_contents($watermarkImage));
-                                if (!Storage::disk('local')->exists('public/'.$pdfUpload_Location.'/'.$wmImageName)) {
-                                    return $this->returnDataMesage(
+                                Storage::disk('local')->put(
+                                    $pdfUpload_Location.'/'.$wmImageName,
+                                    file_get_contents($watermarkImage)
+                                );
+                                if (!Storage::disk('local')->exists($pdfUpload_Location.'/'.$wmImageName)) {
+                                    return $this->returnDataMessage(
                                         400,
                                         'PDF Watermark failed !',
                                         null,
-                                        $batchId,
                                         null,
-                                        Storage::disk('local')->path('public/'.$pdfUpload_Location.'/'.$wmImageName)
+                                        null,
+                                        $batchId,
+                                        Storage::disk('local')->path($pdfUpload_Location.'/'.$wmImageName)
                                     );
                                 }
                                 $watermarkText = null;
@@ -245,12 +248,13 @@ class watermarkController extends Controller
                                         'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
                                         'procDuration' => $duration->s.' seconds'
                                     ]);
-                                return $this->returnDataMesage(
+                                return $this->returnDataMessage(
                                     400,
                                     'PDF Watermark failed !',
                                     null,
-                                    $batchId,
                                     null,
+                                    null,
+                                    $batchId,
                                     'Text for watermark can not be empty !'
                                 );
                             }
@@ -276,12 +280,13 @@ class watermarkController extends Controller
                                 'Invalid request action !',
                                 'Current request: '.$watermarkAction
                             );
-                            return $this->returnDataMesage(
+                            return $this->returnDataMessage(
                                 400,
                                 'PDF Watermark failed !',
                                 null,
-                                $batchId,
                                 null,
+                                null,
+                                $batchId,
                                 'Invalid request action !'.',Current request: '.$watermarkAction
                             );
                         }
@@ -325,7 +330,7 @@ class watermarkController extends Controller
                             );
                             if ($watermarkAction == 'img') {
                                 $ilovepdfTask->setEncryption(true);
-                                $wmImage = $ilovepdfTask->addElementFile(Storage::disk('local')->path('public/'.$pdfUpload_Location.'/'.$wmImageName));
+                                $wmImage = $ilovepdfTask->addElementFile(Storage::disk('local')->path($pdfUpload_Location.'/'.$wmImageName));
                                 $pdfFile = $ilovepdfTask->addFileFromUrl($pdfTempUrl);
                                 $ilovepdfTask->setMode("image");
                                 $ilovepdfTask->setImageFile($wmImage);
@@ -355,10 +360,10 @@ class watermarkController extends Controller
                             }
                             $ilovepdfTask->setOutputFileName($randomizePdfFileName);
                             $ilovepdfTask->execute();
-                            $ilovepdfTask->download(Storage::disk('local')->path('public/'.$pdfDownload_Location));
+                            $ilovepdfTask->download(Storage::disk('local')->path($pdfDownload_Location));
                             $ilovepdfTask->delete();
                             if ($watermarkAction == 'img') {
-                                Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$wmImageName);
+                                Storage::disk('local')->delete($pdfUpload_Location.'/'.$wmImageName);
                             }
                             watermarkModel::where('processId', '=', $procUuid)
                                 ->update([
@@ -398,27 +403,33 @@ class watermarkController extends Controller
                                 $e->getMessage()
                             );
                             if ($watermarkAction == 'img') {
-                                Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$wmImageName);
+                                Storage::disk('local')->delete($pdfUpload_Location.'/'.$wmImageName);
                             }
-                            return $this->returnDataMesage(
+                            return $this->returnDataMessage(
                                 400,
                                 'PDF Watermark failed !',
-                                $e->getMessage(),
-                                $batchId,
                                 null,
+                                $e->getMessage(),
+                                null,
+                                $batchId,
                                 'iLovePDF API Error !, Catch on Exception'
                             );
                         }
-                        if (Storage::disk('local')->exists('public/'.$pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf')) {
+                        if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf')) {
                             Storage::disk('minio')->put(
                                 $pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf',
-                                Storage::disk('local')->get('public/'.$pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf')
+                                Storage::disk('local')->get($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf')
                             );
-                            Storage::disk('local')->delete('public/'.$pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf');
+                            Storage::disk('local')->delete($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf');
                             $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf');
                             $newProcFileSize = AppHelper::instance()->convert($fileProcSize, "MB");
                             $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                             $duration = $end->diff($startProc);
+                            AppHelper::instance()->fileModelHelper($randomizePdfFileName.'.pdf', $newProcFileSize, $fileUuid, $batchId, false, null);
+                            $fileId = fileModel::where('fileName', '=', $randomizePdfFileName.'.pdf')
+                                                ->where('isDeleted', '=', false)
+                                                ->first()
+                                                ->fileId;
                             appLogModel::where('groupId', '=', $batchId)
                                 ->update([
                                     'errReason' => null,
@@ -427,6 +438,7 @@ class watermarkController extends Controller
                             watermarkModel::where('groupId', '=', $batchId)
                                 ->update([
                                     'result' => true,
+                                    'fileId' => $fileId,
                                     'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
                                     'procDuration' => $duration->s.' seconds'
                                 ]);
@@ -469,12 +481,13 @@ class watermarkController extends Controller
                                 null,
                                 true
                             );
-                            return $this->returnDataMesage(
+                            return $this->returnDataMessage(
                                 400,
                                 'PDF Watermark failed !',
                                 null,
-                                $batchId,
                                 null,
+                                null,
+                                $batchId,
                                 'Failed to download file from iLovePDF API !'
                             );
                         }
@@ -502,12 +515,13 @@ class watermarkController extends Controller
                         'File not found on the server',
                         'File not found on our end, please try again'
                     );
-                    return $this->returnDataMesage(
+                    return $this->returnDataMessage(
                         400,
                         'PDF Compression failed !',
                         null,
-                        $batchId,
                         null,
+                        null,
+                        $batchId,
                         'File not found on our end, please try again'
                     );
                 }
@@ -520,29 +534,6 @@ class watermarkController extends Controller
                     'errReason' => null,
                     'errStatus' => 'PDF failed to upload !'
                 ]);
-                watermarkModel::create([
-                    'fileName' => null,
-                    'fileSize' => null,
-                    'watermarkFontFamily' => null,
-                    'watermarkFontStyle' => null,
-                    'watermarkFontSize' => null,
-                    'watermarkFontTransparency' => null,
-                    'watermarkImage' => null,
-                    'watermarkLayout' => null,
-                    'watermarkMosaic' => null,
-                    'watermarkRotation' => null,
-                    'watermarkStyle' => null,
-                    'watermarkText' => null,
-                    'watermarkPage' => null,
-                    'result' => false,
-                    'isBatch' => $batchValue,
-                    'batchName' => null,
-                    'groupId' => $batchId,
-                    'processId' => $uuid,
-                    'procStartAt' => $startProc,
-                    'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
-                    'procDuration' => $duration->s.' seconds'
-                ]);
                 NotificationHelper::Instance()->sendErrNotify(
                     null,
                     null,
@@ -552,12 +543,13 @@ class watermarkController extends Controller
                     'PDF failed to upload !',
                     null
                 );
-                return $this->returnDataMesage(
+                return $this->returnDataMessage(
                     400,
                     'PDF Watermark failed !',
                     null,
-                    $batchId,
                     null,
+                    null,
+                    $batchId,
                     'PDF failed to upload !'
                 );
             }

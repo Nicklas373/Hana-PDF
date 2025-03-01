@@ -29,14 +29,17 @@ class CleanUp extends Command
         $pdfUpload_Location = env('PDF_UPLOAD');
         $pdfProcessed_Location = env('PDF_DOWNLOAD');
         $pdfMerge_Location = env('PDF_MERGE_TEMP');
-        $pdfImage_Location = env('ILOVEPDF_EXT_IMG_DIR');
-        $publicUploadTemp = Storage::allFiles('public/'.$pdfUpload_Location);
-        $publicDownloadTemp = Storage::allFiles('public/'.$pdfProcessed_Location);
-        $publicMergeTemp = Storage::allFiles('public/'.$pdfMerge_Location);
-        $publicImageTemp = Storage::allFiles('public/'.$pdfImage_Location);
-        Storage::delete($publicUploadTemp);
-        Storage::delete($publicDownloadTemp);
-        Storage::delete($publicMergeTemp);
-        Storage::delete($publicImageTemp);
+        $pdfImage_Location = env('PDF_IMG_POOL');
+        $pdfPool_Location = env('PDF_POOL');
+        $publicUploadTemp = Storage::disk('local')->allFiles($pdfUpload_Location);
+        $publicDownloadTemp = Storage::disk('local')->allFiles($pdfUpload_Location);
+        $publicMergeTemp = Storage::disk('local')->allFiles($pdfUpload_Location);
+        $publicImageTemp = Storage::disk('local')->allFiles($pdfUpload_Location);
+        $publicPoolTemp = Storage::disk('local')->allFiles($pdfPool_Location);
+        Storage::disk('local')->delete($publicUploadTemp);
+        Storage::disk('local')->delete($publicDownloadTemp);
+        Storage::disk('local')->delete($publicMergeTemp);
+        Storage::disk('local')->delete($publicImageTemp);
+        Storage::disk('local')->delete($publicPoolTemp);
     }
 }

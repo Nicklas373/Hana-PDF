@@ -10,7 +10,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -37,9 +36,10 @@ class AuthController extends Controller
                 'Auth breach detected, requested with '.json_encode($credentials),
                 false
             );
-            return $this->returnDataMesage(
+            return $this->returnDataMessage(
                 401,
                 'Access unauthorized',
+                null,
                 null,
                 null,
                 null,

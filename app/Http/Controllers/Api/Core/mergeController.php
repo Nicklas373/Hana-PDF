@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Api\Core;
 use App\Helpers\AppHelper;
 use App\Helpers\NotificationHelper;
 use App\Models\appLogModel;
+use App\Models\fileModel;
 use App\Models\mergeModel;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Ilovepdf\Ilovepdf;
@@ -21,12 +21,21 @@ class mergeController extends Controller
     public function merge(Request $request) {
         $validator = Validator::make($request->all(),[
             'batch' => ['required', 'in:true,false'],
-            'file' => 'required',
+            'file' => [
+                'required',
+                'array'
+            ],
+            'file.*' => [
+                'required',
+                'string',
+                'regex:/\.pdf/i'
+            ]
 		]);
 
         // Generate Uni UUID
         $uuid = AppHelper::Instance()->generateUniqueUuid(mergeModel::class, 'processId');
         $batchId = AppHelper::Instance()->generateUniqueUuid(mergeModel::class, 'groupId');
+        $fileUuid = AppHelper::Instance()->generateUniqueUuid(fileModel::class, 'processId');
 
         // Carbon timezone
         date_default_timezone_set('Asia/Jakarta');
@@ -49,12 +58,13 @@ class mergeController extends Controller
                 'Validation failed',
                 $validator->messages()->first()
             );
-            return $this->returnDataMesage(
+            return $this->returnDataMessage(
                 400,
                 'Validation failed',
                 null,
-                $batchId,
                 null,
+                null,
+                $batchId,
                 $validator->messages()->first()
             );
 		} else {
@@ -78,30 +88,16 @@ class mergeController extends Controller
                     $currentFileName = basename($file);
                     $trimPhase1 = str_replace(' ', '_', $currentFileName);
                     $newFileNameWithoutExtension = str_replace('.', '_', $trimPhase1);
-                    try {
-                        if (Storage::disk('minio')->exists($pdfUpload_Location.'/'.$trimPhase1)) {
-                            array_push($altPoolFiles, $newFileNameWithoutExtension);
-                        }
-                    } catch (\Exception $e) {
+                    if (Storage::disk('minio')->exists($pdfUpload_Location.'/'.$trimPhase1)) {
+                        array_push($altPoolFiles, $newFileNameWithoutExtension);
+                    } else {
                         $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                         $duration = $end->diff($startProc);
                         appLogModel::create([
-                            'processId' => $procUuid,
+                            'processId' => $uuid,
                             'groupId' => $batchId,
-                            'errReason' => $e->getMessage(),
+                            'errReason' => null,
                             'errStatus' => $currentFileName.' could not be found in the object storage'
-                        ]);
-                        mergeModel::create([
-                            'fileName' => $currentFileName,
-                            'fileSize' => null,
-                            'result' => false,
-                            'isBatch' => true,
-                            'batchName' => null,
-                            'groupId' => $batchId,
-                            'processId' => $procUuid,
-                            'procStartAt' => $startProc,
-                            'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
-                            'procDuration' =>  $duration->s.' seconds'
                         ]);
                         NotificationHelper::Instance()->sendErrNotify(
                             $currentFileName,
@@ -110,14 +106,15 @@ class mergeController extends Controller
                             'FAIL',
                             'merge',
                             $currentFileName.' could not be found in the object storage',
-                            $e->getMessage()
+                            null
                         );
-                        return $this->returnDataMesage(
+                        return $this->returnDataMessage(
                             400,
                             'PDF Merge failed !',
                             null,
-                            $batchId,
                             null,
+                            null,
+                            $batchId,
                             $currentFileName.' could not be found in the object storage'
                         );
                     }
@@ -137,6 +134,10 @@ class mergeController extends Controller
                             $newFileNameWithoutExtension = str_replace('.', '_', $firstTrim);
                             $fileSize = Storage::disk('minio')->size($pdfUpload_Location.'/'.$trimPhase1);
                             $newFileSize = AppHelper::instance()->convert($fileSize, "MB");
+                            $fileId = fileModel::where('fileName', '=', $trimPhase1)
+                                            ->where('isDeleted', '=', false)
+                                            ->first()
+                                            ->fileId;
                             if ($batchValue) {
                                 $newFileName = $randomizePdfFileName.'.zip';
                             } else {
@@ -155,13 +156,16 @@ class mergeController extends Controller
                                 'errStatus' => null
                             ]);
                             mergeModel::create([
-                                'fileName' => $currentFileName,
+                                'fileName' => $file.'.pdf',
                                 'fileSize' => $newFileSize,
                                 'result' => false,
                                 'isBatch' => true,
+                                'isDeleted' => false,
                                 'batchName' => $newFileName,
+                                'fileId' => $fileId,
                                 'groupId' => $batchId,
                                 'processId' => $procUuid,
+                                'deletedAt' => null,
                                 'procStartAt' => $startProc,
                                 'procEndAt' => null,
                                 'procDuration' => null
@@ -169,12 +173,12 @@ class mergeController extends Controller
                         }
                         $ilovepdfTask->setOutputFileName($randomizePdfFileName);
                         $ilovepdfTask->execute();
-                        $ilovepdfTask->download(Storage::disk('local')->path('public/'.$pdfDownload_Location));
+                        $ilovepdfTask->download(Storage::disk('local')->path($pdfDownload_Location));
                         $ilovepdfTask->delete();
                         foreach ($files as $file) {
                             $currentFileName = basename($file);
                             $trimPhase1 = str_replace(' ', '_', $currentFileName);
-                            Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
+                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
                         }
                     } catch (\Exception $e) {
                         $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
@@ -202,27 +206,33 @@ class mergeController extends Controller
                         foreach ($files as $file) {
                             $currentFileName = basename($file);
                             $trimPhase1 = str_replace(' ', '_', $currentFileName);
-                            Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
+                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
                         }
-                        return $this->returnDataMesage(
+                        return $this->returnDataMessage(
                             400,
                             'PDF Merge failed !',
-                            $e->getMessage(),
-                            $batchId,
                             null,
+                            $e->getMessage(),
+                            null,
+                            $batchId,
                             'iLovePDF API Error !, Catch on Exception'
                         );
                     }
-                    if (Storage::disk('local')->path('public/'.$pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf')) {
+                    if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf')) {
                         Storage::disk('minio')->put(
                             $pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf',
-                            Storage::disk('local')->get('public/'.$pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf')
+                            Storage::disk('local')->get($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf')
                         );
-                        Storage::disk('local')->delete('public/'.$pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf');
+                        Storage::disk('local')->delete($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf');
                         $mergedFileSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf');
                         $newMergedFileSize = AppHelper::instance()->convert($mergedFileSize, "MB");
                         $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                         $duration = $end->diff($startProc);
+                        AppHelper::instance()->fileModelHelper($randomizePdfFileName.'.pdf', $newMergedFileSize, $fileUuid, $batchId, false, null);
+                        $fileId = fileModel::where('fileName', '=', $randomizePdfFileName.'.pdf')
+                                            ->where('isDeleted', '=', false)
+                                            ->first()
+                                            ->fileId;
                         appLogModel::where('groupId', '=', $batchId)
                             ->update([
                                 'errReason' => null,
@@ -231,6 +241,7 @@ class mergeController extends Controller
                         mergeModel::where('groupId', '=', $batchId)
                             ->update([
                                 'result' => true,
+                                'fileId' => $fileId,
                                 'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
                                 'procDuration' => $duration->s.' seconds'
                             ]);
@@ -271,12 +282,13 @@ class mergeController extends Controller
                             'Failed to download file from iLovePDF API !',
                             null
                         );
-                        return $this->returnDataMesage(
+                        return $this->returnDataMessage(
                             400,
                             'PDF Merge failed !',
                             null,
-                            $batchId,
                             null,
+                            null,
+                            $batchId,
                             'Failed to download file from iLovePDF API !'
                         );
                     }
@@ -303,12 +315,13 @@ class mergeController extends Controller
                         'File not found on the server',
                         'File not found on our end, please try again'
                     );
-                    return $this->returnDataMesage(
+                    return $this->returnDataMessage(
                         400,
                         'PDF Merge failed !',
                         null,
-                        $batchId,
                         null,
+                        null,
+                        $batchId,
                         'File not found on our end, please try again'
                     );
                 }
@@ -321,17 +334,6 @@ class mergeController extends Controller
                     'errReason' => null,
                     'errStatus' => 'PDF failed to upload !'
                 ]);
-                mergeModel::create([
-                    'fileName' => null,
-                    'fileSize' => null,
-                    'result' => true,
-                    'isBatch' => false,
-                    'groupId' => $batchId,
-                    'processId' => $uuid,
-                    'procStartAt' => $startProc,
-                    'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
-                    'procDuration' => $duration->s.' seconds'
-                ]);
                 NotificationHelper::Instance()->sendErrNotify(
                     null,
                     null,
@@ -340,12 +342,13 @@ class mergeController extends Controller
                     'merge',
                     'PDF failed to upload !'
                 );
-                return $this->returnDataMesage(
+                return $this->returnDataMessage(
                     400,
                     'PDF Merge failed !',
                     null,
-                    $batchId,
                     null,
+                    null,
+                    $batchId,
                     'PDF failed to upload !'
                 );
             }

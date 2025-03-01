@@ -26,17 +26,22 @@ return new class extends Migration
             $table->boolean('urlSinglePage')->nullable();
             $table->enum('urlSize', ['A3','A4','A5','Letter'])->nullable();
             $table->boolean('result');
+            $table->boolean('isDeleted');
+            $table->boolean('isReport')->nullable()->default(false);
+            $table->id('fileId');
             $table->uuid('groupId');
             $table->uuid('processId')->unique();
+            $table->timestamp('deletedAt')->nullable();
             $table->timestamp('procStartAt')->nullable();
             $table->timestamp('procEndAt')->nullable();
             $table->char('procDuration', length: 25)->nullable();
-            $table->boolean('isReport')->nullable()->default(false);
             $table->timestamp('created_at')->nullable()->useCurrent()->useCurrentOnUpdate();
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
 
             // Configure foreign key
             $table->foreign('processId')->references('processId')->on('appLogs');
+            $table->foreign('groupId')->references('groupId')->on('appLogs');
+            $table->foreign('fileId')->references('fileId')->on('filePool');
         });
     }
 

@@ -6,6 +6,7 @@ use App\Helpers\AppHelper;
 use App\Helpers\NotificationHelper;
 use App\Http\Controllers\Controller;
 use App\Models\appLogModel;
+use App\Models\fileModel;
 use App\Models\splitModel;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -19,7 +20,15 @@ class splitController extends Controller
 {
  	public function split(Request $request) {
 		$validator = Validator::make($request->all(),[
-            'file' => 'required',
+            'file' => [
+                'required',
+                'array'
+            ],
+            'file.*' => [
+                'required',
+                'string',
+                'regex:/\.pdf/i'
+            ],
             'action' => ['required', 'in:delete,split'],
             'fromPage' => ['nullable', 'numeric'],
             'toPage' => ['nullable', 'numeric'],
@@ -32,6 +41,7 @@ class splitController extends Controller
         // Generate Uni UUID
         $uuid = AppHelper::Instance()->generateUniqueUuid(splitModel::class, 'processId');
         $batchId = AppHelper::Instance()->generateUniqueUuid(splitModel::class, 'groupId');
+        $fileUuid = AppHelper::Instance()->generateUniqueUuid(fileModel::class, 'processId');
 
         // Carbon timezone
         date_default_timezone_set('Asia/Jakarta');
@@ -54,12 +64,13 @@ class splitController extends Controller
                 'Validation failed',
                 $validator->messages()->first()
             );
-            return $this->returnDataMesage(
+            return $this->returnDataMessage(
                 400,
                 'Validation failed',
                 null,
-                $batchId,
                 null,
+                null,
+                $batchId,
                 $validator->messages()->first()
             );
 		} else {
@@ -83,34 +94,47 @@ class splitController extends Controller
                 $randomizePdfFileName = 'pdfSplit_'.substr(bin2hex(random_bytes(4)), 0, 8);
                 if ($action == 'split' && $usedMethod == 'range') {
                     if (empty($fromPage) || empty($toPage)) {
-                        return $this->returnDataMesage(
+                        return $this->returnDataMessage(
                             400,
                             'PDF Split failed !',
                             null,
-                            $batchId,
                             null,
+                            null,
+                            $batchId,
                             'First or last page can not be empty !'
+                        );
+                    } else if ($fromPage == 0 || $toPage == 0) {
+                        return $this->returnDataMessage(
+                            400,
+                            'PDF Split failed !',
+                            null,
+                            null,
+                            null,
+                            $batchId,
+                            'First or last page can not be zero !'
                         );
                     }
                 } else if ($action == 'split' && $usedMethod == 'custom') {
                     if (empty($customInputSplitPage)) {
-                        return $this->returnDataMesage(
+                        return $this->returnDataMessage(
                             400,
                             'PDF Split failed !',
                             null,
-                            $batchId,
                             null,
+                            null,
+                            $batchId,
                             'Custom or selected page can not be empty !'
                         );
                     }
                 } else if ($action == 'delete' && $usedMethod == 'custom') {
                     if (empty($customInputDeletePage)) {
-                        return $this->returnDataMesage(
+                        return $this->returnDataMessage(
                             400,
                             'PDF Split failed !',
                             null,
-                            $batchId,
                             null,
+                            null,
+                            $batchId,
                             'Custom or selected page can not be empty !'
                         );
                     }
@@ -119,37 +143,16 @@ class splitController extends Controller
                     $currentFileName = basename($file);
                     $trimPhase1 = str_replace(' ', '_', $currentFileName);
                     $newFileNameWithoutExtension = str_replace('.', '_', $trimPhase1);
-                    try {
-                        if (Storage::disk('minio')->exists($pdfUpload_Location.'/'.$trimPhase1)) {
-                            array_push($altPoolFiles, $newFileNameWithoutExtension);
-                        }
-                    } catch (\Exception $e) {
+                    if (Storage::disk('minio')->exists($pdfUpload_Location.'/'.$trimPhase1)) {
+                        array_push($altPoolFiles, $newFileNameWithoutExtension);
+                    } else {
                         $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                         $duration = $end->diff($startProc);
                         appLogModel::create([
-                            'processId' => $procUuid,
+                            'processId' => $uuid,
                             'groupId' => $batchId,
-                            'errReason' => $e->getMessage(),
+                            'errReason' => null,
                             'errStatus' => $currentFileName.' could not be found in the object storage'
-                        ]);
-                        splitModel::create([
-                            'fileName' => $currentFileName,
-                            'fileSize' => null,
-                            'fromPage' => $fromPage,
-                            'toPage' => $toPage,
-                            'customSplitPage' => null,
-                            'customDeletePage' => null,
-                            'fixedRange' => null,
-                            'mergePDF' => $mergeDBpdf,
-                            'action' => $action,
-                            'result' => false,
-                            'isBatch' => $batchValue,
-                            'groupId' => $batchId,
-                            'processId' => $procUuid,
-                            'batchName' => null,
-                            'procStartAt' => $startProc,
-                            'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
-                            'procDuration' =>  $duration->s.' seconds'
                         ]);
                         NotificationHelper::Instance()->sendErrNotify(
                             $currentFileName,
@@ -158,14 +161,15 @@ class splitController extends Controller
                             'FAIL',
                             'split',
                             $currentFileName.' could not be found in the object storage',
-                            $e->getMessage()
+                            null
                         );
-                        return $this->returnDataMesage(
+                        return $this->returnDataMessage(
                             400,
                             'PDF Split failed !',
                             null,
-                            $batchId,
                             null,
+                            null,
+                            $batchId,
                             $currentFileName.' could not be found in the object storage'
                         );
                     }
@@ -176,15 +180,22 @@ class splitController extends Controller
                         $trimPhase1 = str_replace(' ', '_', $currentFileName);
                         $newFileNameWithoutExtension = str_replace('.', '_', $trimPhase1);
                         $newFormattedFilename = str_replace('_pdf', '', $newFileNameWithoutExtension);
-                        $minioUpload = Storage::disk('minio')->get($pdfUpload_Location.'/'.$currentFileName);
-                        Storage::disk('local')->get('public/'.$pdfUpload_Location.'/'.$currentFileName, $minioUpload);
-                        $newFilePath = Storage::disk('local')->path('public/'.$pdfUpload_Location.'/'.$currentFileName);
+                        $minioUpload = Storage::disk('minio')->get($pdfUpload_Location.'/'.$trimPhase1);
+                        Storage::disk('local')->put(
+                            $pdfUpload_Location.'/'.$trimPhase1,
+                            $minioUpload
+                        );
+                        $newFilePath = Storage::disk('local')->path($pdfUpload_Location.'/'.$trimPhase1);
                         $fileSize = Storage::disk('minio')->size($pdfUpload_Location.'/'.$trimPhase1);
                         $newFileSize = AppHelper::instance()->convert($fileSize, "MB");
                         $procUuid = AppHelper::Instance()->generateUniqueUuid(splitModel::class, 'processId');
+                        $fileId = fileModel::where('fileName', '=', $trimPhase1)
+                                            ->where('isDeleted', '=', false)
+                                            ->first()
+                                            ->fileId;
                         if ($tempPDF == 'true') {
-                            if (Storage::disk('local')->exists('public/'.$pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')) {
-                                Storage::disk('local')->delete('public/'.$pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
+                            if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')) {
+                                Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
                             }
                         }
                         if ($request->has('action')) {
@@ -215,9 +226,12 @@ class splitController extends Controller
                                 'action' => $action,
                                 'result' => false,
                                 'isBatch' => $batchValue,
+                                'isDeleted' => false,
                                 'groupId' => $batchId,
                                 'processId' => $procUuid,
                                 'batchName' => $newFileName,
+                                'fileId' => $fileId,
+                                'deletedAt' => null,
                                 'procStartAt' => $startProc,
                                 'procEndAt' => null,
                                 'procDuration' => null
@@ -249,13 +263,14 @@ class splitController extends Controller
                                                 'PDF split failed!',
                                                 'Last page has more page than total PDF page ! (total page: '.$pdfTotalPages.')'
                                             );
-                                            Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
-                                            return $this->returnDataMesage(
+                                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
+                                            return $this->returnDataMessage(
                                                 400,
                                                 'PDF Split failed !',
                                                 null,
-                                                $batchId,
                                                 null,
+                                                null,
+                                                $batchId,
                                                 'Last page has more page than total PDF page ! (total page: '.$pdfTotalPages.')'
                                             );
                                         } else if ($fromPage > $pdfTotalPages) {
@@ -281,13 +296,14 @@ class splitController extends Controller
                                                 'PDF split failed!',
                                                 'First page has more page than total PDF page ! (total page: '.$pdfTotalPages.')'
                                             );
-                                            Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
-                                            return $this->returnDataMesage(
+                                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
+                                            return $this->returnDataMessage(
                                                 400,
                                                 'PDF Split failed !',
                                                 null,
-                                                $batchId,
                                                 null,
+                                                null,
+                                                $batchId,
                                                 'First page has more page than total PDF page ! (total page: '.$pdfTotalPages.')'
                                             );
                                         } else if ($fromPage > $toPage) {
@@ -313,14 +329,48 @@ class splitController extends Controller
                                                 'PDF split failed!',
                                                 'First Page has more page than last page ! (total page: '.$pdfTotalPages.')'
                                             );
-                                            Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
-                                            return $this->returnDataMesage(
+                                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
+                                            return $this->returnDataMessage(
                                                 400,
                                                 'PDF Split failed !',
                                                 null,
-                                                $batchId,
                                                 null,
+                                                null,
+                                                $batchId,
                                                 'First Page has more page than last page ! (total page: '.$pdfTotalPages.')',
+                                            );
+                                        }  else if ($fromPage == 0 || $toPage == 0) {
+                                            $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
+                                            $duration = $end->diff($startProc);
+                                            appLogModel::where('groupId', '=', $batchId)
+                                                ->update([
+                                                    'errReason' => 'First Page or last page can be empty or zero (firstPage: '.$fromPage.' lastPage: '.$toPage.')',
+                                                    'errStatus' => 'PDF split failed!'
+                                                ]);
+                                            splitModel::where('groupId', '=', $batchId)
+                                                ->update([
+                                                    'result' => false,
+                                                    'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
+                                                    'procDuration' => $duration->s.' seconds'
+                                                ]);
+                                            NotificationHelper::Instance()->sendErrNotify(
+                                                $currentFileName,
+                                                $newFileSize,
+                                                $batchId,
+                                                'FAIL',
+                                                'split',
+                                                'PDF split failed!',
+                                                'First Page or last page can be empty or zero (firstPage: '.$fromPage.' lastPage: '.$toPage.')',
+                                            );
+                                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
+                                            return $this->returnDataMessage(
+                                                400,
+                                                'PDF Split failed !',
+                                                null,
+                                                null,
+                                                null,
+                                                $batchId,
+                                                'First Page or last page can be empty or zero (firstPage: '.$fromPage.' lastPage: '.$toPage.')',
                                             );
                                         } else {
                                             if ($mergeDBpdf == "true") {
@@ -358,13 +408,14 @@ class splitController extends Controller
                                             'split',
                                             'First or Last page can not empty'
                                         );
-                                        Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
-                                        return $this->returnDataMesage(
+                                        Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
+                                        return $this->returnDataMessage(
                                             400,
                                             'PDF Split failed !',
                                             null,
-                                            $batchId,
                                             null,
+                                            null,
+                                            $batchId,
                                             'First or Last page can not empty'
                                         );
                                     }
@@ -393,13 +444,14 @@ class splitController extends Controller
                                                 'PDF split failed!',
                                                 'Input Page has more page than last page ! (total page: '.$pdfTotalPages.')'
                                             );
-                                            Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
-                                            return $this->returnDataMesage(
+                                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
+                                            return $this->returnDataMessage(
                                                 400,
                                                 'PDF Split failed !',
                                                 null,
-                                                $batchId,
                                                 null,
+                                                null,
+                                                $batchId,
                                                 'Input Page has more page than last page ! (total page: '.$pdfTotalPages.')'
                                             );
                                         } else {
@@ -436,13 +488,14 @@ class splitController extends Controller
                                             'PDF split failed!',
                                             'Input Page has more page than last page ! (total page: '.$pdfTotalPages.')'
                                         );
-                                        Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
-                                        return $this->returnDataMesage(
+                                        Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
+                                        return $this->returnDataMessage(
                                             400,
                                             'PDF Split failed !',
                                             null,
-                                            $batchId,
                                             null,
+                                            null,
+                                            $batchId,
                                             'Input Page has more page than last page ! (total page: '.$pdfTotalPages.')'
                                         );
                                     } else {
@@ -455,7 +508,7 @@ class splitController extends Controller
                                 }
                             }
                             try {
-                                Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
+                                Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
                                 $ilovepdf = new Ilovepdf(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
                                 $ilovepdfTask = $ilovepdf->newTask('split');
                                 $ilovepdfTask->setFileEncryption($pdfEncKey);
@@ -480,7 +533,7 @@ class splitController extends Controller
                                 $ilovepdfTask->setPackagedFilename($randomizePdfFileName);
                                 $ilovepdfTask->setOutputFileName($newFormattedFilename);
                                 $ilovepdfTask->execute();
-                                $ilovepdfTask->download(Storage::disk('local')->path('public/'.$pdfDownload_Location));
+                                $ilovepdfTask->download(Storage::disk('local')->path($pdfDownload_Location));
                                 $ilovepdfTask->delete();
                             } catch (\Exception $e) {
                                 $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
@@ -508,27 +561,33 @@ class splitController extends Controller
                                     'iLovePDF API Error !, Catch on Exception',
                                     $e->getMessage()
                                 );
-                                Storage::disk('local')->delete('public/'.$pdfUpload_Location.'/'.$trimPhase1);
-                                return $this->returnDataMesage(
+                                Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
+                                return $this->returnDataMessage(
                                     400,
                                     'PDF Split failed !',
-                                    $e->getMessage(),
-                                    $batchId,
                                     null,
+                                    $e->getMessage(),
+                                    null,
+                                    $batchId,
                                     'iLovePDF API Error !, Catch on Exception'
                                 );
                             }
                             if ($action == 'split') {
-                                if (Storage::disk('local')->exists('public/'.$pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')) {
+                                if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')) {
                                     Storage::disk('minio')->put(
                                         $pdfDownload_Location.'/'.$newFormattedFilename.'.pdf',
-                                        Storage::disk('local')->get('public/'.$pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')
+                                        Storage::disk('local')->get($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')
                                     );
-                                    Storage::disk('local')->delete('public/'.$newFormattedFilename.'.pdf');
+                                    Storage::disk('local')->delete($newFormattedFilename.'.pdf');
                                     $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
                                     $newFileProcSize = AppHelper::instance()->convert($fileProcSize, "MB");
                                     $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                                     $duration = $end->diff($startProc);
+                                    AppHelper::instance()->fileModelHelper($newFormattedFilename.'.pdf', $newFileProcSize, $fileUuid, $batchId, false, null);
+                                    $fileId = fileModel::where('fileName', '=', $newFormattedFilename.'.pdf')
+                                                        ->where('isDeleted', '=', false)
+                                                        ->first()
+                                                        ->fileId;
                                     appLogModel::where('groupId', '=', $batchId)
                                         ->update([
                                             'errReason' => null,
@@ -540,6 +599,7 @@ class splitController extends Controller
                                             'customDeletePage' => $customInputDeletePage,
                                             'fixedRange' => $newPageRanges,
                                             'result' => true,
+                                            'fileId' => $fileId,
                                             'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
                                             'procDuration' => $duration->s.' seconds'
                                         ]);
@@ -558,16 +618,21 @@ class splitController extends Controller
                                         null,
                                         null
                                     );
-                                } else if (Storage::disk('local')->exists('public/'.$pdfDownload_Location.'/'.$randomizePdfFileName.'.zip')) {
+                                } else if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip')) {
                                     Storage::disk('minio')->put(
                                         $pdfDownload_Location.'/'.$randomizePdfFileName.'.zip',
-                                        Storage::disk('local')->get('public/'.$pdfDownload_Location.'/'.$randomizePdfFileName.'.zip')
+                                        Storage::disk('local')->get($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip')
                                     );
-                                    Storage::disk('local')->delete('public/'.$randomizePdfFileName.'.zip');
+                                    Storage::disk('local')->delete($randomizePdfFileName.'.zip');
                                     $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip');
                                     $newFileProcSize = AppHelper::instance()->convert($fileProcSize, "MB");
                                     $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                                     $duration = $end->diff($startProc);
+                                    AppHelper::instance()->fileModelHelper($randomizePdfFileName.'.zip', $newFileProcSize, $fileUuid, $batchId, false, null);
+                                    $fileId = fileModel::where('fileName', '=', $randomizePdfFileName.'.zip')
+                                                        ->where('isDeleted', '=', false)
+                                                        ->first()
+                                                        ->fileId;
                                     appLogModel::where('groupId', '=', $batchId)
                                         ->update([
                                             'errReason' => null,
@@ -579,6 +644,7 @@ class splitController extends Controller
                                             'customDeletePage' => $customInputDeletePage,
                                             'fixedRange' => $newPageRanges,
                                             'result' => true,
+                                            'fileId' => $fileId,
                                             'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
                                             'procDuration' => $duration->s.' seconds'
                                         ]);
@@ -597,16 +663,21 @@ class splitController extends Controller
                                         null,
                                         null
                                     );
-                                } else if (Storage::disk('local')->exists('public/'.$pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf')) {
+                                } else if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf')) {
                                     Storage::disk('minio')->put(
                                         $pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf',
-                                        Storage::disk('local')->get('public/'.$pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf')
+                                        Storage::disk('local')->get($pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf')
                                     );
-                                    Storage::disk('local')->delete('public/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf');
+                                    Storage::disk('local')->delete($newFormattedFilename.'-'.$newPageRanges.'.pdf');
                                     $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf');
                                     $newFileProcSize = AppHelper::instance()->convert($fileProcSize, "MB");
                                     $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                                     $duration = $end->diff($startProc);
+                                    AppHelper::instance()->fileModelHelper($newFormattedFilename.'-'.$newPageRanges.'.pdf', $newFileProcSize, $fileUuid, $batchId, false, null);
+                                    $fileId = fileModel::where('fileName', '=', $newFormattedFilename.'-'.$newPageRanges.'.pdf')
+                                                        ->where('isDeleted', '=', false)
+                                                        ->first()
+                                                        ->fileId;
                                     appLogModel::where('groupId', '=', $batchId)
                                         ->update([
                                             'errReason' => null,
@@ -618,6 +689,7 @@ class splitController extends Controller
                                             'customDeletePage' => $customInputDeletePage,
                                             'fixedRange' => $newPageRanges,
                                             'result' => true,
+                                            'fileId' => $fileId,
                                             'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
                                             'procDuration' => $duration->s.' seconds'
                                         ]);
@@ -662,26 +734,32 @@ class splitController extends Controller
                                         'Failed to download file from iLovePDF API !',
                                         null
                                     );
-                                    return $this->returnDataMesage(
+                                    return $this->returnDataMessage(
                                         400,
                                         'PDF Split failed !',
                                         null,
-                                        $batchId,
                                         null,
+                                        null,
+                                        $batchId,
                                         'Failed to download file from iLovePDF API !'
                                     );
                                 }
                             } else if ($action == 'delete') {
-                                if (Storage::disk('local')->exists('public/'.$pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')) {
+                                if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')) {
                                     Storage::disk('minio')->put(
                                         $pdfDownload_Location.'/'.$newFormattedFilename.'.pdf',
-                                        Storage::disk('local')->get('public/'.$pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')
+                                        Storage::disk('local')->get($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')
                                     );
-                                    Storage::disk('local')->delete('public/'.$pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
+                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
                                     $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
                                     $newFileProcSize = AppHelper::instance()->convert($fileProcSize, "MB");
                                     $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                                     $duration = $end->diff($startProc);
+                                    AppHelper::instance()->fileModelHelper($newFormattedFilename.'.pdf', $newFileProcSize, $fileUuid, $batchId, false, null);
+                                    $fileId = fileModel::where('fileName', '=', $newFormattedFilename.'.pdf')
+                                                        ->where('isDeleted', '=', false)
+                                                        ->first()
+                                                        ->fileId;
                                     appLogModel::where('groupId', '=', $batchId)
                                         ->update([
                                             'errReason' => null,
@@ -693,6 +771,7 @@ class splitController extends Controller
                                             'customDeletePage' => $customInputDeletePage,
                                             'fixedRange' => $newPageRanges,
                                             'result' => true,
+                                            'fileId' => $fileId,
                                             'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
                                             'procDuration' => $duration->s.' seconds'
                                         ]);
@@ -736,12 +815,13 @@ class splitController extends Controller
                                         'Failed to download file from iLovePDF API !',
                                         null
                                     );
-                                    return $this->returnDataMesage(
+                                    return $this->returnDataMessage(
                                         400,
                                         'PDF Split failed !',
                                         null,
-                                        $batchId,
                                         null,
+                                        null,
+                                        $batchId,
                                         'Failed to download file from iLovePDF API !'
                                     );
                                 }
@@ -768,12 +848,13 @@ class splitController extends Controller
                                 'Invalid split request method !',
                                 null
                             );
-                            return $this->returnDataMesage(
+                            return $this->returnDataMessage(
                                 400,
                                 'PDF Split failed !',
                                 null,
-                                $batchId,
                                 null,
+                                null,
+                                $batchId,
                                 'Invalid split request method !'
                             );
                         }
@@ -801,12 +882,13 @@ class splitController extends Controller
                         'File not found on the server',
                         'File not found on our end, please try again'
                     );
-                    return $this->returnDataMesage(
+                    return $this->returnDataMessage(
                         400,
                         'PDF Split failed !',
                         null,
-                        $batchId,
                         null,
+                        null,
+                        $batchId,
                         'File not found on our end, please try again'
                     );
                 }
@@ -819,25 +901,6 @@ class splitController extends Controller
                     'errReason' => null,
                     'errStatus' => 'PDF failed to upload !'
                 ]);
-                splitModel::create([
-                    'fileName' => null,
-                    'fileSize' => null,
-                    'fromPage' => null,
-                    'toPage' => null,
-                    'customSplitPage' => null,
-                    'customDeletePage' => null,
-                    'fixedRange' => null,
-                    'mergePDF' => null,
-                    'action' => null,
-                    'result' => false,
-                    'isBatch' => null,
-                    'groupId' => $batchId,
-                    'processId' => $uuid,
-                    'batchName' => null,
-                    'procStartAt' => $startProc,
-                    'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
-                    'procDuration' => $duration->s.' seconds'
-                ]);
                 NotificationHelper::Instance()->sendErrNotify(
                     null,
                     null,
@@ -846,12 +909,13 @@ class splitController extends Controller
                     'PDF failed to upload !',
                     null
                 );
-                return $this->returnDataMesage(
+                return $this->returnDataMessage(
                     400,
                     'PDF Split failed !',
                     null,
-                    $batchId,
                     null,
+                    null,
+                    $batchId,
                     'PDF failed to upload !'
                 );
             }

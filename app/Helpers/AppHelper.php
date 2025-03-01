@@ -7,6 +7,7 @@ use App\Models\notifyLogModel;
 use App\Models\compressModel;
 use App\Models\cnvModel;
 use App\Models\htmlModel;
+use App\Models\fileModel;
 use App\Models\mergeModel;
 use App\Models\splitModel;
 use App\Models\watermarkModel;
@@ -18,15 +19,11 @@ use Ramsey\Uuid\Uuid;
 class AppHelper
 {
     function checkWebAvailable($url){
-        try {
-            $response = Http::timeout(30)
-                            ->get($url);
-            if ($response->successful()) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (\Exception $e) {
+        $response = Http::timeout(30)
+                        ->get($url);
+        if ($response->successful()) {
+            return true;
+        } else {
             return false;
         }
     }
@@ -58,6 +55,22 @@ class AppHelper
         }
 
         return $size;
+    }
+
+    function fileModelHelper($fileName, $fileSize, $fileUuid, $fileGroupId, $isDeleted, $deletedAt) {
+        appLogModel::create([
+            'processId' => $fileUuid,
+            'groupId' => $fileGroupId,
+            'errReason' => null,
+            'errStatus' => null
+        ]);
+        fileModel::create([
+            'fileName' => $fileName,
+            'fileSize' => $fileSize,
+            'isDeleted' => $isDeleted,
+            'processId' => $fileUuid,
+            'deletedAt' => $deletedAt
+        ]);
     }
 
     function getAsposeToken($clientId, $clientSecret)
@@ -102,31 +115,28 @@ class AppHelper
     }
 
     function generateUniqueUuid($customModel, $customColumn) {
-        try {
-            if ($customColumn !== 'processId') {
-                do {
-                    $uniqueID = Uuid::uuid4();
-                } while (
-                    $customModel::where($customColumn, $uniqueID)->exists()
-                );
-            } else {
-                do {
-                    $uniqueID = Uuid::uuid4();
-                } while (
-                    appLogModel::where($customColumn, $uniqueID)->exists() ||
-                    jobLogModel::where($customColumn, $uniqueID)->exists() ||
-                    notifyLogModel::where($customColumn, $uniqueID)->exists() ||
-                    compressModel::where($customColumn, $uniqueID)->exists() ||
-                    cnvModel::where($customColumn, $uniqueID)->exists() ||
-                    htmlModel::where($customColumn, $uniqueID)->exists() ||
-                    mergeModel::where($customColumn, $uniqueID)->exists() ||
-                    splitModel::where($customColumn, $uniqueID)->exists() ||
-                    watermarkModel::where($customColumn, $uniqueID)->exists()
-                );
-            }
-        } catch (\Exception $e) {
-            $uniqueID = Uuid::uuid4();
+        if ($customColumn !== 'processId') {
+            do {
+                $uniqueID = Uuid::uuid4();
+            } while (
+                $customModel::where($customColumn, $uniqueID)->exists()
+            );
+        } else {
+            do {
+                $uniqueID = Uuid::uuid4();
+            } while (
+                appLogModel::where($customColumn, $uniqueID)->exists() ||
+                jobLogModel::where($customColumn, $uniqueID)->exists() ||
+                notifyLogModel::where($customColumn, $uniqueID)->exists() ||
+                compressModel::where($customColumn, $uniqueID)->exists() ||
+                cnvModel::where($customColumn, $uniqueID)->exists() ||
+                htmlModel::where($customColumn, $uniqueID)->exists() ||
+                mergeModel::where($customColumn, $uniqueID)->exists() ||
+                splitModel::where($customColumn, $uniqueID)->exists() ||
+                watermarkModel::where($customColumn, $uniqueID)->exists()
+            );
         }
+
         return $uniqueID->toString();
     }
 

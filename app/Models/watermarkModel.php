@@ -30,9 +30,12 @@ class watermarkModel extends Model
         'watermarkPage',
         'result',
         'isBatch',
+        'isDeleted',
+        'fileId',
         'batchName',
         'groupId',
         'processId',
+        'deletedAt',
         'procStartAt',
         'procEndAt',
         'procDuration'
