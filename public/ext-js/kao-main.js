@@ -39,8 +39,8 @@ if (firstArea) {
         if (firstAreaAltInput.value == "split") {
             splitLayout2_split();
             if (
-                !thirdColumnArea.style.borderColor == "rgb(77, 170, 170)" ||
-                !fourthColumnArea.style.borderColor == "rgb(77, 170, 170)"
+                thirdColumnArea.style.borderColor !== "rgb(77, 170, 170)" ||
+                fourthColumnArea.style.borderColor !== "rgb(77, 170, 170)"
             ) {
                 splitLayout2_splitClean();
             }
@@ -396,9 +396,6 @@ function reloadIFrame() {
     var iframe = document.getElementById("iFrame");
     if (iframe !== null) {
         if (iframe.contentDocument !== null) {
-            if (iframe.contentDocument.URL == "about:blank") {
-                iframe.src = iframe.src;
-            }
             document.getElementById("iFrame").style.display = "none";
             document.getElementById("iFrameBorder").style.display = null;
         } else {
