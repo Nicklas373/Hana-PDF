@@ -472,7 +472,6 @@ if (uploadDropzone) {
                             Authorization: `Bearer ${bearerToken}`,
                             "X-Requested-With": "XMLHttpRequest",
                             Accept: "application/json",
-                            file: filePath,
                         },
                         body: JSON.stringify({
                             file: filePath,
@@ -782,7 +781,6 @@ if (uploadDropzoneAlt) {
                             Authorization: `Bearer ${bearerToken}`,
                             "X-Requested-With": "XMLHttpRequest",
                             Accept: "application/json",
-                            file: filePath,
                         },
                         body: JSON.stringify({
                             file: filePath,
@@ -1185,7 +1183,6 @@ if (uploadDropzoneSingle) {
                             Authorization: `Bearer ${bearerToken}`,
                             "X-Requested-With": "XMLHttpRequest",
                             Accept: "application/json",
-                            file: filePath,
                         },
                         body: JSON.stringify({
                             file: filePath,
