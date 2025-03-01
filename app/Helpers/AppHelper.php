@@ -115,26 +115,30 @@ class AppHelper
     }
 
     function generateUniqueUuid($customModel, $customColumn) {
-        if ($customColumn !== 'processId') {
-            do {
-                $uniqueID = Uuid::uuid4();
-            } while (
-                $customModel::where($customColumn, $uniqueID)->exists()
-            );
-        } else {
-            do {
-                $uniqueID = Uuid::uuid4();
-            } while (
-                appLogModel::where($customColumn, $uniqueID)->exists() ||
-                jobLogModel::where($customColumn, $uniqueID)->exists() ||
-                notifyLogModel::where($customColumn, $uniqueID)->exists() ||
-                compressModel::where($customColumn, $uniqueID)->exists() ||
-                cnvModel::where($customColumn, $uniqueID)->exists() ||
-                htmlModel::where($customColumn, $uniqueID)->exists() ||
-                mergeModel::where($customColumn, $uniqueID)->exists() ||
-                splitModel::where($customColumn, $uniqueID)->exists() ||
-                watermarkModel::where($customColumn, $uniqueID)->exists()
-            );
+        try {
+            if ($customColumn !== 'processId') {
+                do {
+                    $uniqueID = Uuid::uuid4();
+                } while (
+                    $customModel::where($customColumn, $uniqueID)->exists()
+                );
+            } else {
+                do {
+                    $uniqueID = Uuid::uuid4();
+                } while (
+                    appLogModel::where($customColumn, $uniqueID)->exists() ||
+                    jobLogModel::where($customColumn, $uniqueID)->exists() ||
+                    notifyLogModel::where($customColumn, $uniqueID)->exists() ||
+                    compressModel::where($customColumn, $uniqueID)->exists() ||
+                    cnvModel::where($customColumn, $uniqueID)->exists() ||
+                    htmlModel::where($customColumn, $uniqueID)->exists() ||
+                    mergeModel::where($customColumn, $uniqueID)->exists() ||
+                    splitModel::where($customColumn, $uniqueID)->exists() ||
+                    watermarkModel::where($customColumn, $uniqueID)->exists()
+                );
+            }
+        } catch (\Exception $e) {
+            $uniqueID = Uuid::uuid4();
         }
 
         return $uniqueID->toString();
