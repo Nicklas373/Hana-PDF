@@ -1,5 +1,14 @@
 [
   {
+    "release_date": "March, 01 2025",
+    "version": "3.4.6",
+    "changelog": [
+      "Fix issue thumbnail can not be generated when multiple file upload",
+      "Properly handling when page was inputted 0 on split or watermark page",
+      "Upgrade our web framework into Laravel 12.x"
+    ]
+  },
+  {
     "release_date": "January, 12 2025",
     "version": "3.4.4",
     "changelog": [
