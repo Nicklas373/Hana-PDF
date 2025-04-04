@@ -1,18 +1,18 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 /* Internal CSS */
 input[type="file"]::file-selector-button {
-    background-color: #4DAAAA !important;
-    font-family: 'quicksand', 'sans-serif';
-    color: #E0E4E5;
+    background-color: #4daaaa !important;
+    font-family: "quicksand", "sans-serif";
+    color: #e0e4e5;
 }
 select option {
     background: rgba(77, 170, 170, 0.5) !important;
-    color: #EFF3F4 !important;
+    color: #eff3f4 !important;
     text-shadow: rgba(77, 170, 170, 1) !important;
-    font-family: 'quicksand';
+    font-family: "quicksand";
     font-size: 15px;
     font-weight: bold;
     appearance: none !important;
