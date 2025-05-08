@@ -1,14 +1,10 @@
-# Use php:8.3-fpm-alpine as base image
-FROM php:8.3-fpm-alpine
+# Use php:8.4.7RC1-fpm-alpine as base image
+FROM php:8.4.7RC1-fpm-alpine
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.7"
+LABEL version="2.0"
 LABEL description="Docker container for https://gw.hana-ci.com"
-
-# Configure ARG
-ARG DB_USERNAME
-ARG DB_PASSWORD
 
 # Configure work directory
 WORKDIR /var/www/html
@@ -40,12 +36,8 @@ RUN apk add --no-cache \
     busybox-suid \
     nano
 
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install -j$(nproc) gd zip pdo_pgsql ftp sodium
-
 # Install Imagick extension
-RUN cd /tmp && curl -L -o /tmp/imagick.tar.gz https://pecl.php.net/get/imagick-3.7.0.tgz \
+RUN cd /tmp && curl -L -o /tmp/imagick.tar.gz https://pecl.php.net/get/imagick-3.8.0.tgz \
     && tar --strip-components=1 -xf /tmp/imagick.tar.gz \
     && phpize \
     && ./configure \
@@ -53,6 +45,10 @@ RUN cd /tmp && curl -L -o /tmp/imagick.tar.gz https://pecl.php.net/get/imagick-3
     && make install \
     && echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini \
     && rm -rf /tmp/*
+
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install -j$(nproc) gd zip pdo_pgsql ftp sodium
 
 # Clone App Services
 RUN git clone -b dev/be/master https://github.com/Nicklas373/Hana-PDF hanaci-api
@@ -111,7 +107,8 @@ RUN cd hanaci-api && echo "MINIO_SECRET_KEY=xxxx" >> .env
 RUN cd hanaci-api && echo "MINIO_REGION=us-east-1" >> .env
 RUN cd hanaci-api && echo "MINIO_BUCKET=hana-pdf-sit" >> .env
 RUN cd hanaci-api && echo "MINIO_ENDPOINT=xxxx" >> .env
-
+RUN cd hanaci-api && echo "JWT_SECRET=xxx" >> .env
+RUN cd hanaci-api && echo "JWT_ALGO=HS256" >> .env
 
 # Configure permission
 RUN cd hanaci-api && \
