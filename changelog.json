@@ -1,5 +1,12 @@
 [
   {
+    "release_date": "Mei, 08 2025",
+    "version": "3.4.7",
+    "changelog": [
+      "Updating our internal libraries and instances to latest version"
+    ]
+  },
+  {
     "release_date": "March, 01 2025",
     "version": "3.4.6",
     "changelog": [
