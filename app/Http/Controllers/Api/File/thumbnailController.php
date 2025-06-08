@@ -109,7 +109,7 @@ class thumbnailController extends Controller
                     }
                 } catch (Exception $e) {
                     return $this->returnFileMessage(
-                        500,
+                        400,
                         'Failed to generate thumbnail !',
                         $pdfRealName,
                         'Could not generate thumbnail with error: '.$e->getMessage()
