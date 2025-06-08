@@ -30,17 +30,17 @@ jobs:
             --build-arg JWT_TTL=${{ secrets.JWT_TTL }} \
             --build-arg DB_USERNAME=${{ secrets.DB_USERNAME }} \
             --build-arg DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -t nicklas373/hana-api-services-sit:1.7 \
+            -t nicklas373/hana-api-services-sit:1.8 \
             -f Dockerfile/Dockerfile.hana-api-services.sit \
             .
           mkdir -p api_image
-          docker save -o api_image/api_image.tar nicklas373/hana-api-services-sit:1.7
+          docker save -o api_image/api_image.tar nicklas373/hana-api-services-sit:1.8
 
       - name: Load Docker Images
         run: docker load -i api_image/api_image.tar
 
       - name: Deploy Docker Image to Docker Hub
-        run: docker push nicklas373/hana-api-services-sit:1.7
+        run: docker push nicklas373/hana-api-services-sit:1.8
 
       - name: Docker Success Notifications
         run: |
@@ -69,17 +69,17 @@ jobs:
           docker build \
             --build-arg DB_USERNAME=${{ secrets.DB_USERNAME }} \
             --build-arg DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -t nicklas373/hana-app-pdf-sit:1.4 \
+            -t nicklas373/hana-app-pdf-sit:2.1 \
             -f Dockerfile/Dockerfile.hana-app-pdf.sit \
             .
           mkdir -p pdf_image
-          docker save -o pdf_image/pdf_image.tar nicklas373/hana-app-pdf-sit:1.4
+          docker save -o pdf_image/pdf_image.tar nicklas373/hana-app-pdf-sit:2.1
 
       - name: Load Docker Images
         run: docker load -i pdf_image/pdf_image.tar
 
       - name: Deploy Docker Image to Docker Hub
-        run: docker push nicklas373/hana-app-pdf-sit:1.4
+        run: docker push nicklas373/hana-app-pdf-sit:2.1
 
       - name: Docker Success Notifications
         run: |

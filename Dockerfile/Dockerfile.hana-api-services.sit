@@ -1,9 +1,9 @@
-# Use php:8.4.7RC1-fpm-alpine as base image
-FROM php:8.4.7RC1-fpm-alpine
+# Use php:8.4.8RC1-fpm-alpine as base image
+FROM php:8.4.8RC1-fpm-alpine
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="2.0"
+LABEL version="2.1"
 LABEL description="Docker container for https://gw.hana-ci.com"
 
 # Configure work directory
