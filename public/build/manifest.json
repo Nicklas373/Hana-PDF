@@ -1,39 +1,48 @@
 {
-  "_index-C0KN3TP7.js": {
-    "file": "assets/index-C0KN3TP7.js",
+  "_index-ydv54_CT.js": {
+    "file": "assets/index-ydv54_CT.js",
     "name": "index"
   },
   "resources/css/app-lite.css": {
-    "file": "assets/app-lite--fHekfu5.css",
+    "file": "assets/app-lite-9Cr0BNat.css",
     "src": "resources/css/app-lite.css",
-    "isEntry": true
+    "isEntry": true,
+    "names": [
+      "app-lite.css"
+    ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-a6orADoi.css",
+    "file": "assets/app-DiewOylX.css",
     "src": "resources/css/app.css",
-    "isEntry": true
+    "isEntry": true,
+    "names": [
+      "app.css"
+    ]
   },
   "resources/css/font.css": {
     "file": "assets/font-BT25aFx1.css",
     "src": "resources/css/font.css",
-    "isEntry": true
+    "isEntry": true,
+    "names": [
+      "font.css"
+    ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-D3ByZa47.js",
+    "file": "assets/app-BIdFe81E.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_index-C0KN3TP7.js"
+      "_index-ydv54_CT.js"
     ]
   },
   "resources/js/kao-logic.js": {
-    "file": "assets/kao-logic-DkQWNu5F.js",
+    "file": "assets/kao-logic-DhXQhxEZ.js",
     "name": "kao-logic",
     "src": "resources/js/kao-logic.js",
     "isEntry": true,
     "imports": [
-      "_index-C0KN3TP7.js"
+      "_index-ydv54_CT.js"
     ]
   }
 }
