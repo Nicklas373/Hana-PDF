@@ -1,5 +1,10 @@
 [
   {
+    "release_date": "July, 18 2024",
+    "version": "3.4.8",
+    "changelog": ["Major update for our internal frameworks to latest version"]
+  },
+  {
     "release_date": "Mei, 08 2025",
     "version": "3.4.7",
     "changelog": [
