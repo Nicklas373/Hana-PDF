@@ -206,6 +206,7 @@ class convertController extends Controller
                                 $minioUpload
                             );
                             $newFilePath = Storage::disk('local')->path($pdfUpload_Location.'/'.$currentFileName);
+                            $pdfStream = fopen($newFilePath, 'r');
                             $asposeToken = AppHelper::instance()->getAsposeToken(env('ASPOSE_CLOUD_CLIENT_ID'), env('ASPOSE_CLOUD_TOKEN'));
                             if ($asposeToken) {
                                 try {
@@ -214,8 +215,14 @@ class convertController extends Controller
                                     // this should reducing SSRF attacks potential, but still need to re-look after it
                                     $asposeAPI = Http::timeout(300)
                                         ->withToken($asposeToken)
-                                        ->attach('file', Storage::disk('local')->get($pdfUpload_Location.'/'.$currentFileName), basename($newFilePath))
-                                        ->put("https://api.aspose.cloud/v3.0/pdf/convert/{$convertType}?outPath={$newFormattedFilename}.{$convertType}");
+                                        ->withHeaders([
+                                            'Accept' => 'application/json',
+                                            'Content-Type' => 'application/octet-stream'
+                                        ])
+                                        ->send('PUT', "https://api.aspose.cloud/v3.0/pdf/convert/{$convertType}?outPath={$newFormattedFilename}.{$convertType}", [
+                                            'body' => $pdfStream,
+                                        ]);
+                                    fclose($pdfStream);
                                     if ($asposeAPI->successful()) {
                                         if (Storage::disk('ftp')->exists($newFormattedFilename.".".$convertType)) {
                                             $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
