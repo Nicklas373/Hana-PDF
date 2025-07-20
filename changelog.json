@@ -1,8 +1,11 @@
 [
   {
-    "release_date": "July, 18 2025",
+    "release_date": "July, 20 2025",
     "version": "3.4.8",
-    "changelog": ["Major update for our internal frameworks to latest version"]
+    "changelog": [
+      "Fix issue regarding convert PDF to PPTX and XLSX",
+      "Major update for our internal frameworks to latest version"
+    ]
   },
   {
     "release_date": "Mei, 08 2025",
