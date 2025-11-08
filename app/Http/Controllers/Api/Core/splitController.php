@@ -193,11 +193,6 @@ class splitController extends Controller
                                             ->where('isDeleted', '=', false)
                                             ->first()
                                             ->fileId;
-                        if ($tempPDF == 'true') {
-                            if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')) {
-                                Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
-                            }
-                        }
                         if ($request->has('action')) {
                             if ($tempPDF == 'true') {
                                 $mergeDBpdf = "true";
@@ -508,17 +503,13 @@ class splitController extends Controller
                                 }
                             }
                             try {
-                                Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
                                 $ilovepdf = new Ilovepdf(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
                                 $ilovepdfTask = $ilovepdf->newTask('split');
                                 $ilovepdfTask->setFileEncryption($pdfEncKey);
                                 $ilovepdfTask->setEncryptKey($pdfEncKey);
                                 $ilovepdfTask->setEncryption(true);
-                                $pdfTempUrl =  Storage::disk('minio')->temporaryUrl(
-                                    $pdfUpload_Location.'/'.$trimPhase1,
-                                    now()->addSeconds(30)
-                                );
-                                $pdfFile = $ilovepdfTask->addFileFromUrl($pdfTempUrl);
+                                $pdfFile = $ilovepdfTask->addFile($newFilePath);
+                                Storage::disk('local')->delete($newFilePath);
                                 $pdfFile->setPassword($pdfEncKey);
                                 if ($action == 'split') {
                                     $ilovepdfTask->setRanges($newPageRanges);
@@ -578,11 +569,11 @@ class splitController extends Controller
                                         $pdfDownload_Location.'/'.$newFormattedFilename.'.pdf',
                                         Storage::disk('local')->get($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')
                                     );
-                                    Storage::disk('local')->delete($newFormattedFilename.'.pdf');
                                     $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
                                     $newFileProcSize = AppHelper::instance()->convert($fileProcSize, "MB");
                                     $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                                     $duration = $end->diff($startProc);
+                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
                                     AppHelper::instance()->fileModelHelper($newFormattedFilename.'.pdf', $newFileProcSize, $fileUuid, $batchId, false, null);
                                     $fileId = fileModel::where('fileName', '=', $newFormattedFilename.'.pdf')
                                                         ->where('isDeleted', '=', false)
@@ -623,11 +614,11 @@ class splitController extends Controller
                                         $pdfDownload_Location.'/'.$randomizePdfFileName.'.zip',
                                         Storage::disk('local')->get($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip')
                                     );
-                                    Storage::disk('local')->delete($randomizePdfFileName.'.zip');
                                     $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip');
                                     $newFileProcSize = AppHelper::instance()->convert($fileProcSize, "MB");
                                     $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                                     $duration = $end->diff($startProc);
+                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip');
                                     AppHelper::instance()->fileModelHelper($randomizePdfFileName.'.zip', $newFileProcSize, $fileUuid, $batchId, false, null);
                                     $fileId = fileModel::where('fileName', '=', $randomizePdfFileName.'.zip')
                                                         ->where('isDeleted', '=', false)
@@ -668,11 +659,11 @@ class splitController extends Controller
                                         $pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf',
                                         Storage::disk('local')->get($pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf')
                                     );
-                                    Storage::disk('local')->delete($newFormattedFilename.'-'.$newPageRanges.'.pdf');
                                     $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf');
                                     $newFileProcSize = AppHelper::instance()->convert($fileProcSize, "MB");
                                     $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                                     $duration = $end->diff($startProc);
+                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'-'.$newPageRanges.'.pdf');
                                     AppHelper::instance()->fileModelHelper($newFormattedFilename.'-'.$newPageRanges.'.pdf', $newFileProcSize, $fileUuid, $batchId, false, null);
                                     $fileId = fileModel::where('fileName', '=', $newFormattedFilename.'-'.$newPageRanges.'.pdf')
                                                         ->where('isDeleted', '=', false)
@@ -750,11 +741,11 @@ class splitController extends Controller
                                         $pdfDownload_Location.'/'.$newFormattedFilename.'.pdf',
                                         Storage::disk('local')->get($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')
                                     );
-                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
                                     $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
                                     $newFileProcSize = AppHelper::instance()->convert($fileProcSize, "MB");
                                     $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                                     $duration = $end->diff($startProc);
+                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
                                     AppHelper::instance()->fileModelHelper($newFormattedFilename.'.pdf', $newFileProcSize, $fileUuid, $batchId, false, null);
                                     $fileId = fileModel::where('fileName', '=', $newFormattedFilename.'.pdf')
                                                         ->where('isDeleted', '=', false)

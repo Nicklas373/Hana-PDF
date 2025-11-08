@@ -195,11 +195,6 @@ class convertController extends Controller
                             'procDuration' => null
                         ]);
                         if ($convertType == 'xlsx' || $convertType == 'pptx') {
-                            if ($loopCount <= 1) {
-                                if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFormattedFilename.'.'.$convertType)) {
-                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'.'.$convertType);
-                                }
-                            }
                             $minioUpload = Storage::disk('minio')->get($pdfUpload_Location.'/'.$currentFileName);
                             Storage::disk('local')->put(
                                 $pdfUpload_Location.'/'.$currentFileName,
@@ -378,11 +373,6 @@ class convertController extends Controller
                                 );
                             }
                         } else if ($convertType == 'docx') {
-                            if ($loopCount <= 1) {
-                                if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFormattedFilename.'.docx')) {
-                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'.docx');
-                                }
-                            }
                             $minioUpload = Storage::disk('minio')->get($pdfUpload_Location.'/'.$currentFileName);
                             Storage::disk('local')->put(
                                 $pdfUpload_Location.'/'.$currentFileName,
@@ -527,13 +517,6 @@ class convertController extends Controller
                                 );
                             }
                         } else if ($convertType == 'jpg') {
-                            if ($loopCount <= 1) {
-                                if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFileNameWithoutExtension.'.jpg')) {
-                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFileNameWithoutExtension.'.jpg');
-                                } else if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFileNameWithoutExtension.'-0001.jpg')) {
-                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFileNameWithoutExtension.'-0001.jpg');
-                                }
-                            }
                             $minioUpload = Storage::disk('minio')->get($pdfUpload_Location.'/'.$currentFileName);
                             Storage::disk('local')->put(
                                 $pdfUpload_Location.'/'.$currentFileName,
@@ -541,23 +524,21 @@ class convertController extends Controller
                             );
                             $newFilePath = Storage::disk('local')->path($pdfUpload_Location.'/'.$currentFileName);
                             $pdfTotalPages = AppHelper::instance()->count($newFilePath);
-                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
                             try {
                                 $ilovepdfTask = new PdfjpgTask(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
                                 $ilovepdfTask->setFileEncryption($pdfEncKey);
                                 $ilovepdfTask->setEncryptKey($pdfEncKey);
                                 $ilovepdfTask->setEncryption(true);
-                                $pdfTempUrl =  Storage::disk('minio')->temporaryUrl(
-                                    $pdfUpload_Location.'/'.$trimPhase1,
-                                    now()->addSeconds(30)
-                                );
-                                $pdfFile = $ilovepdfTask->addFileFromUrl($pdfTempUrl);
+                                $pdfFile = $ilovepdfTask->addFile($newFilePath);
+                                Storage::disk('local')->delete($newFilePath);
                                 $ilovepdfTask->setMode($imageModes);
                                 $ilovepdfTask->setOutputFileName($newFormattedFilename);
                                 $ilovepdfTask->setPackagedFilename($newFormattedFilename);
                                 $ilovepdfTask->execute();
                                 $ilovepdfTask->download(Storage::disk('local')->path($pdfDownload_Location));
+                                $ilovepdfTask->delete();
                             } catch (\Exception $e) {
+                                Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
                                 $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                                 $duration = $end->diff($startProc);
                                 appLogModel::where('groupId', '=', $batchId)
@@ -629,41 +610,37 @@ class convertController extends Controller
                                 }
                             }
                         } else if ($convertType == 'pdf') {
-                            if ($loopCount <= 1) {
-                                if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf')) {
-                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFormattedFilename.'.pdf');
-                                }
-                            }
-                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$trimPhase1);
+                            $minioUpload = Storage::disk('minio')->get($pdfUpload_Location.'/'.$currentFileName);
+                            Storage::disk('local')->put(
+                                $pdfUpload_Location.'/'.$currentFileName,
+                                $minioUpload
+                            );
+                            $newFilePath = Storage::disk('local')->path($pdfUpload_Location.'/'.$currentFileName);
                             try {
                                 if ($pdfNameWithExtension == "jpg" || $pdfNameWithExtension == "jpeg" || $pdfNameWithExtension == "png" || $pdfNameWithExtension == "tiff") {
                                     $ilovepdfTask = new ImagepdfTask(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
                                     $ilovepdfTask->setFileEncryption($pdfEncKey);
                                     $ilovepdfTask->setEncryptKey($pdfEncKey);
                                     $ilovepdfTask->setEncryption(true);
-                                    $pdfTempUrl =  Storage::disk('minio')->temporaryUrl(
-                                        $pdfUpload_Location.'/'.$trimPhase1,
-                                        now()->addSeconds(30)
-                                    );
-                                    $pdfFile = $ilovepdfTask->addFileFromUrl($pdfTempUrl);
+                                    $pdfFile = $ilovepdfTask->addFile($newFilePath);
+                                    Storage::disk('local')->delete($newFilePath);
+                                    $pdfFile->setPassword($pdfEncKey);
                                     $ilovepdfTask->setPageSize('fit');
                                     $ilovepdfTask->setOutputFileName($newFormattedFilename);
                                     $ilovepdfTask->setPackagedFilename($newFormattedFilename);
                                     $ilovepdfTask->execute();
                                     $ilovepdfTask->download(Storage::disk('local')->path($pdfDownload_Location));
-
-                                    log::info('Download location:'.$pdfDownload_Location);
+                                    $ilovepdfTask->delete();
                                 } else {
                                     $ilovepdfTask = new OfficepdfTask(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
                                     $ilovepdfTask->setFileEncryption(env('ILOVEPDF_ENC_KEY'));
-                                    $pdfTempUrl =  Storage::disk('minio')->temporaryUrl(
-                                        $pdfUpload_Location.'/'.$trimPhase1,
-                                        now()->addSeconds(30)
-                                    );
-                                    $pdfFile = $ilovepdfTask->addFileFromUrl($pdfTempUrl);
+                                    $pdfFile = $ilovepdfTask->addFile($newFilePath);
+                                    Storage::disk('local')->delete($newFilePath);
+                                    $pdfFile->setPassword($pdfEncKey);
                                     $ilovepdfTask->setOutputFileName($newFormattedFilename);
                                     $ilovepdfTask->execute();
                                     $ilovepdfTask->download(Storage::disk('local')->path($pdfDownload_Location));
+                                    $ilovepdfTask->delete();
                                 }
                             } catch (\Exception $e) {
                                 $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());

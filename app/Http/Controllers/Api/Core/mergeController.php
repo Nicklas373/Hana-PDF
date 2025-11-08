@@ -143,12 +143,14 @@ class mergeController extends Controller
                             } else {
                                 $newFileName = $currentFileName;
                             }
-                            $pdfTempUrl =  Storage::disk('minio')->temporaryUrl(
-                                $pdfUpload_Location.'/'.$trimPhase1,
-                                now()->addSeconds(30)
+                            $minioUpload = Storage::disk('minio')->get($pdfUpload_Location.'/'.$currentFileName);
+                            Storage::disk('local')->put(
+                                $pdfUpload_Location.'/'.$currentFileName,
+                                $minioUpload
                             );
-                            $pdfName = $ilovepdfTask->addFileFromUrl($pdfTempUrl);
-                            $pdfName->setPassword($pdfEncKey);
+                            $newFilePath = Storage::disk('local')->path($pdfUpload_Location.'/'.$currentFileName);
+                            $pdfName = $ilovepdfTask->addFile($newFilePath);
+                            Storage::disk('local')->delete($newFilePath);
                             appLogModel::create([
                                 'processId' => $procUuid,
                                 'groupId' => $batchId,

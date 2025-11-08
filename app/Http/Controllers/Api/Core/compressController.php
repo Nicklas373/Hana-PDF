@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Ilovepdf\Ilovepdf;
@@ -153,17 +154,19 @@ class compressController extends Controller
                             $fileSize = Storage::disk('minio')->size($pdfUpload_Location.'/'.$trimPhase1);
                             $newFileSize = AppHelper::instance()->convert($fileSize, "MB");
                             $procUuid = AppHelper::Instance()->generateUniqueUuid(compressModel::class, 'processId');
-                            if ($loopCount <= 1) {
-                                if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFileName)) {
-                                    Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFileName);
-                                }
-                            }
-                            $pdfTempUrl =  Storage::disk('minio')->temporaryUrl(
-                                $pdfUpload_Location.'/'.$trimPhase1,
-                                now()->addSeconds(30)
+                            $minioUpload = Storage::disk('minio')->get($pdfUpload_Location.'/'.$currentFileName);
+                            Storage::disk('local')->put(
+                                $pdfUpload_Location.'/'.$currentFileName,
+                                $minioUpload
                             );
-                            $pdfFile = $ilovepdfTask->addFileFromUrl($pdfTempUrl);
+                            $newFilePath = Storage::disk('local')->path($pdfUpload_Location.'/'.$currentFileName);
+                            $ilovepdfTask->setFileEncryption($pdfEncKey);
+                            $ilovepdfTask->setEncryptKey($pdfEncKey);
+                            $ilovepdfTask->setEncryption(true);
+                            $pdfFile = $ilovepdfTask->addile($newFilePath);
+                            Storage::disk('local')->delete($pdfUpload_Location.'/'.$currentFileName);
                             $pdfFile->setPassword($pdfEncKey);
+                            $ilovepdfTask->setCompressionLevel($compMethod);
                             appLogModel::create([
                                 'processId' => $procUuid,
                                 'groupId' => $batchId,
@@ -187,7 +190,6 @@ class compressController extends Controller
                                 'procDuration' => null
                             ]);
                         }
-                        $ilovepdfTask->setCompressionLevel($compMethod);
                         if ($batchValue) {
                             $ilovepdfTask->setPackagedFilename($randomizePdfFileName);
                         } else {
@@ -237,9 +239,9 @@ class compressController extends Controller
                                 $pdfDownload_Location.'/'.$randomizePdfFileName.'.zip',
                                 Storage::disk('local')->get($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip')
                             );
-                            Storage::disk('local')->delete($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip');
                             $compFileSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip');
                             $newCompFileSize = AppHelper::instance()->convert($compFileSize, "MB");
+                            Storage::disk('local')->delete($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip');
                             AppHelper::instance()->fileModelHelper($randomizePdfFileName.'.zip', $newCompFileSize, $fileUuid, $batchId, false, null);
                             $fileId = fileModel::where('fileName', '=', $randomizePdfFileName.'.zip')
                                                     ->where('isDeleted', '=', false)
@@ -309,9 +311,9 @@ class compressController extends Controller
                                     $pdfDownload_Location.'/'.$file.'.pdf',
                                     Storage::disk('local')->get($pdfDownload_Location.'/'.$file.'.pdf')
                                 );
-                                Storage::disk('local')->delete($pdfDownload_Location.'/'.$file.'.pdf');
                                 $compFileSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$file.'.pdf');
                                 $newCompFileSize = AppHelper::instance()->convert($compFileSize, "MB");
+                                Storage::disk('local')->delete($pdfDownload_Location.'/'.$randomizePdfFileName.'.zip');
                                 AppHelper::instance()->fileModelHelper($file.'.pdf', $newCompFileSize, $fileUuid, $batchId, false, null);
                                 $fileId = fileModel::where('fileName', '=', $file.'.pdf')
                                                     ->where('isDeleted', '=', false)
