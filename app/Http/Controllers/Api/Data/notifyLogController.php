@@ -23,7 +23,7 @@ class notifyLogController extends Controller
         $validator = Validator::make($request->all(), [
             'processId' => 'required|uuid',
             'groupId' => 'uuid',
-            'logType' =>  ['required', 'in:app,file,jobs,notify,compress,convert,html,merge,split,watermark']
+            'logType' =>  ['required', 'in:app,file,jobs,notify,compress,convert,html,merge,split,watermark'],
         ]);
         if ($validator->fails()) {
             return $this->returnDataMessage(
@@ -274,6 +274,7 @@ class notifyLogController extends Controller
             return $this->returnDataMessage(
                 400,
                 'Validation failed',
+                null,
                 null,
                 null,
                 null,
