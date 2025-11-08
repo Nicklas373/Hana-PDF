@@ -163,7 +163,7 @@ class compressController extends Controller
                             $ilovepdfTask->setFileEncryption($pdfEncKey);
                             $ilovepdfTask->setEncryptKey($pdfEncKey);
                             $ilovepdfTask->setEncryption(true);
-                            $pdfFile = $ilovepdfTask->addile($newFilePath);
+                            $pdfFile = $ilovepdfTask->addFile($newFilePath);
                             Storage::disk('local')->delete($pdfUpload_Location.'/'.$currentFileName);
                             $pdfFile->setPassword($pdfEncKey);
                             $ilovepdfTask->setCompressionLevel($compMethod);
