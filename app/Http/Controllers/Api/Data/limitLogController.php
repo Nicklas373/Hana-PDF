@@ -14,7 +14,7 @@ class limitLogController extends Controller
         $uuid = AppHelper::Instance()->generateUniqueUuid(appLogModel::class, 'processId');
         try {
             $ilovepdf = new Ilovepdf(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
-            $remainingFiles = $ilovepdf->getRemainingFiles();
+            $remainingFiles = $ilovepdf->getRemainingCredits();
             $totalUsage = 2500 - $remainingFiles;
             return $this->returnLimitMessage(
                 200,

@@ -76,7 +76,7 @@ class htmltopdfController extends Controller
             $pdfSinglePage = $request->post('urlSinglePage');
             $newUrl = '';
             AppHelper::instance()->fileModelHelper($pdfDefaultFileName.'.pdf', null, $fileUuid, $batchId, false, null);
-            $fileId = fileModel::where('fileName', '=', $pdfDefaultFileName)
+            $fileId = fileModel::where('fileName', '=', $pdfDefaultFileName.'.pdf')
                                 ->where('isDeleted', '=', false)
                                 ->where('processId', '=', $fileUuid)
                                 ->first()
@@ -137,9 +137,6 @@ class htmltopdfController extends Controller
                     );
                 }
             }
-            if (Storage::disk('local')->exists($pdfProcessed_Location.'/'.$pdfDefaultFileName)) {
-                Storage::disk('local')->delete($pdfProcessed_Location.'/'.$pdfDefaultFileName);
-            }
             try {
                 $ilovepdfTask = new HtmlpdfTask(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
                 $ilovepdfTask->setEncryptKey($pdfEncKey);
@@ -156,6 +153,7 @@ class htmltopdfController extends Controller
                 $ilovepdfTask->setOutputFileName($pdfDefaultFileName);
                 $ilovepdfTask->execute();
                 $ilovepdfTask->download(Storage::disk('local')->path($pdfProcessed_Location));
+                $ilovepdfTask->delete();
             } catch (\Exception $e) {
                 $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                 $duration = $end->diff($startProc);
