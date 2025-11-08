@@ -135,6 +135,12 @@ class watermarkController extends Controller
                         $currentFileName = basename($file);
                         $trimPhase1 = str_replace(' ', '_', $currentFileName);
                         $newFileNameWithoutExtension = str_replace('.', '_', $trimPhase1);
+                        $minioUpload = Storage::disk('minio')->get($pdfUpload_Location.'/'.$trimPhase1);
+                        Storage::disk('local')->put(
+                            $pdfUpload_Location.'/'.$trimPhase1,
+                            $minioUpload
+                        );
+                        $newFilePath = Storage::disk('local')->path($pdfUpload_Location.'/'.$trimPhase1);
                         $fileSize = Storage::disk('minio')->size($pdfUpload_Location.'/'.$trimPhase1);
                         $procUuid = AppHelper::Instance()->generateUniqueUuid(watermarkModel::class, 'processId');
                         $newFileSize = AppHelper::instance()->convert($fileSize, "MB");
@@ -175,9 +181,6 @@ class watermarkController extends Controller
                             'procEndAt' => null,
                             'procDuration' => null
                         ]);
-                        if (Storage::disk('local')->exists($pdfDownload_Location.'/'.$newFileNameWithoutExtension.'.pdf')) {
-                            Storage::disk('local')->delete($pdfDownload_Location.'/'.$newFileNameWithoutExtension.'.pdf');
-                        }
                         if ($watermarkAction == 'img') {
                             $watermarkImage = $request->file('imgFile');
                             if (empty($watermarkImage)) {
@@ -324,14 +327,11 @@ class watermarkController extends Controller
                         try {
                             $ilovepdf = new Ilovepdf(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
                             $ilovepdfTask = $ilovepdf->newTask('watermark');
-                            $pdfTempUrl =  Storage::disk('minio')->temporaryUrl(
-                                $pdfUpload_Location.'/'.$trimPhase1,
-                                now()->addSeconds(30)
-                            );
                             if ($watermarkAction == 'img') {
                                 $ilovepdfTask->setEncryption(true);
                                 $wmImage = $ilovepdfTask->addElementFile(Storage::disk('local')->path($pdfUpload_Location.'/'.$wmImageName));
-                                $pdfFile = $ilovepdfTask->addFileFromUrl($pdfTempUrl);
+                                $pdfFile = $ilovepdfTask->addFile($newFilePath);
+                                Storage::disk('local')->delete($newFilePath);
                                 $ilovepdfTask->setMode("image");
                                 $ilovepdfTask->setImageFile($wmImage);
                                 $ilovepdfTask->setTransparency($watermarkTransparency);
@@ -344,7 +344,8 @@ class watermarkController extends Controller
                                 $ilovepdfTask->setFileEncryption($pdfEncKey);
                                 $ilovepdfTask->setEncryptKey($pdfEncKey);
                                 $ilovepdfTask->setEncryption(true);
-                                $pdfFile = $ilovepdfTask->addFileFromUrl($pdfTempUrl);
+                                $pdfFile = $ilovepdfTask->addFile($newFilePath);
+                                Storage::disk('local')->delete($newFilePath);
                                 $ilovepdfTask->setMode("text");
                                 $ilovepdfTask->setText($watermarkText);
                                 $ilovepdfTask->setPages($watermarkPage);
@@ -420,11 +421,11 @@ class watermarkController extends Controller
                                 $pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf',
                                 Storage::disk('local')->get($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf')
                             );
-                            Storage::disk('local')->delete($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf');
                             $fileProcSize = Storage::disk('minio')->size($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf');
                             $newProcFileSize = AppHelper::instance()->convert($fileProcSize, "MB");
                             $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                             $duration = $end->diff($startProc);
+                            Storage::disk('local')->delete($pdfDownload_Location.'/'.$randomizePdfFileName.'.pdf');
                             AppHelper::instance()->fileModelHelper($randomizePdfFileName.'.pdf', $newProcFileSize, $fileUuid, $batchId, false, null);
                             $fileId = fileModel::where('fileName', '=', $randomizePdfFileName.'.pdf')
                                                 ->where('isDeleted', '=', false)
