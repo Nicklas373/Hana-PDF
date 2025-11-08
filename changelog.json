@@ -1,5 +1,14 @@
 [
   {
+    "release_date": "November, 08 2025",
+    "version": "3.7.5-BE",
+    "changelog": [
+      "Fix HtmlToPDF database transaction due wrong filename on where condition",
+      "Fix Majority core function issue after new dependencies updates",
+      "Updating our internal libraries and instances to latest version"
+    ]
+  },
+  {
     "release_date": "July, 20 2025",
     "version": "3.4.8",
     "changelog": [
