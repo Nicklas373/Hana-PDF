@@ -7,6 +7,7 @@
     "file": "assets/app-lite-BJEg9v1h.css",
     "src": "resources/css/app-lite.css",
     "isEntry": true,
+    "name": "app-lite",
     "names": [
       "app-lite.css"
     ]
@@ -15,6 +16,7 @@
     "file": "assets/app-DCiYrxla.css",
     "src": "resources/css/app.css",
     "isEntry": true,
+    "name": "app",
     "names": [
       "app.css"
     ]
@@ -23,12 +25,13 @@
     "file": "assets/font-BT25aFx1.css",
     "src": "resources/css/font.css",
     "isEntry": true,
+    "name": "font",
     "names": [
       "font.css"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-W6EuiP0_.js",
+    "file": "assets/app-ZY8zd73N.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
