@@ -47,6 +47,7 @@ class notifyLogController extends Controller
                     $applog = appLogModel::where('processId', $processId)->get();
                 }
                 $datalog = null;
+                $filelog = null;
             } else if ($logModel == 'file') {
                 if ($groupId) {
                     return $this->returnDataMessage(
@@ -59,7 +60,8 @@ class notifyLogController extends Controller
                     );
                 } else {
                     $applog = appLogModel::where('processId', $processId)->get();
-                    $datalog = fileModel::where('processId', $processId)->get();
+                    $datalog = null;
+                    $filelog = fileModel::where('processId', $processId)->get();
                 }
             } else if ($logModel == 'jobs') {
                 if ($groupId) {
@@ -69,9 +71,11 @@ class notifyLogController extends Controller
                     $applog = appLogModel::where('processId', $processId)->get();
                     $datalog = jobLogModel::where('processId', $processId)->get();
                 }
+                $filelog = null;
             } else if ($logModel == 'notify') {
                 $applog = appLogModel::where('processId', $processId)->get();
                 $datalog = notifyLogModel::where('processId', $processId)->get();
+                $filelog = null;
             } else if ($logModel == 'compress') {
                 if ($groupId) {
                     $applog = appLogModel::where('groupId', $groupId)->get();
