@@ -30,7 +30,7 @@ class NotificationHelper
 
         if ($proc == "compress") {
             $newRoute = 'api/v2/core/compress';
-        } else if ($proc == "convert" || $proc == "cnvToxlsx" || $proc == "cnvTopptx" || $proc == "cnvToDocx" || $proc == "cnvToImg" || $proc == "pdfToImg") {
+        } else if ($proc == "convert" || $proc == "cnvToxlsx" || $proc == "cnvTopptx" || $proc == "cnvTodocx" || $proc == "cnvToImg" || $proc == "pdfToImg") {
             $newRoute = 'api/v2/core/convert';
         } else if ($proc == "htmltopdf") {
             $newRoute = 'api/v2/core/html';
