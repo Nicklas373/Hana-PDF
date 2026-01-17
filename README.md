@@ -18,38 +18,38 @@ used of Flowbite library to maintain responsive and materialize interface. And p
 
 ### Requirements [For development with local environment]
 
--   [Apache 2.4](https://httpd.apache.org) or [Nginx](https://www.nginx.com)
--   [Composer](http://getcomposer.org/)
--   [Docker](https://www.docker.com/)
-    -   On Windows use Docker Desktop
-    -   On Linux use docker-compose and docker.io
--   [Node JS 20.11](https://nodejs.org/en)
--   [PHP 8.2.12](https://www.php.net/downloads.php)
--   [PostgreSQL 16.2](https://www.postgresql.org/)
--   [Postman](https://www.postman.com/)
+- [Apache 2.4](https://httpd.apache.org) or [Nginx](https://www.nginx.com)
+- [Composer](http://getcomposer.org/)
+- [Docker](https://www.docker.com/)
+    - On Windows use Docker Desktop
+    - On Linux use docker-compose and docker.io
+- [Node JS 20.11](https://nodejs.org/en)
+- [PHP 8.2.12](https://www.php.net/downloads.php)
+- [PostgreSQL 16.2](https://www.postgresql.org/)
+- [Postman](https://www.postman.com/)
 
 ---
 
 ### Python Module Requirements
 
--   Requests
+- Requests
 
 ---
 
 ### Build Status
 
--   [![CodeQL](https://github.com/Nicklas373/Hana-PDF/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Nicklas373/Hana-PDF/actions/workflows/github-code-scanning/codeql)
--   [![HANA PDF Container [SIT]](https://github.com/Nicklas373/Hana-PDF/actions/workflows/docker-sit.yml/badge.svg)](https://github.com/Nicklas373/Hana-PDF/actions/workflows/docker-sit.yml)
--   [![HANA Container Production](https://github.com/Nicklas373/hana-ci-docker-prod/actions/workflows/docker-prod-env.yml/badge.svg)](https://github.com/Nicklas373/hana-ci-docker-prod/actions/workflows/docker-prod-env.yml)
+- [![CodeQL](https://github.com/Nicklas373/Hana-PDF/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Nicklas373/Hana-PDF/actions/workflows/github-code-scanning/codeql)
+- [![HANA PDF Container [SIT]](https://github.com/Nicklas373/Hana-PDF/actions/workflows/docker-sit.yml/badge.svg)](https://github.com/Nicklas373/Hana-PDF/actions/workflows/docker-sit.yml)
+- [![HANA Container Production](https://github.com/Nicklas373/hana-ci-docker-prod/actions/workflows/docker-prod-env.yml/badge.svg)](https://github.com/Nicklas373/hana-ci-docker-prod/actions/workflows/docker-prod-env.yml)
 
 ---
 
 ### Commit History
 
--   [Old branch - master](https://github.com/Nicklas373/Hana-PDF/tree/master)
--   [Docker Container - docker/master](https://github.com/Nicklas373/Hana-PDF/tree/docker/master)
--   [Frontend Services - fe/master](https://github.com/Nicklas373/Hana-PDF/tree/fe/master)
--   [Backend Services - be/master](https://github.com/Nicklas373/Hana-PDF/tree/be/master)
+- [Old branch - master](https://github.com/Nicklas373/Hana-PDF/tree/master)
+- [Docker Container - docker/master](https://github.com/Nicklas373/Hana-PDF/tree/docker/master)
+- [Frontend Services - fe/master](https://github.com/Nicklas373/Hana-PDF/tree/fe/master)
+- [Backend Services - be/master](https://github.com/Nicklas373/Hana-PDF/tree/be/master)
 
 ---
 
@@ -165,7 +165,6 @@ used of Flowbite library to maintain responsive and materialize interface. And p
     ```
 
     C. Create new directory inside storage/app/public
-
     - image
     - batch
     - upload
@@ -185,14 +184,14 @@ used of Flowbite library to maintain responsive and materialize interface. And p
 
 ### Technology Stack
 
--   [Docker](https://www.docker.com/)
--   [DropzoneJS](https://www.dropzone.dev/)
--   [Flowbite](https://flowbite.com/)
--   [Laravel](https://laravel.com/)
--   [Node JS](https://nodejs.org/en)
--   [Mozilla PDFJS](https://mozilla.github.io/pdf.js/)
--   [Tailwind CSS](https://tailwindcss.com/)
--   [Vite JS](https://vitejs.dev/)
+- [Docker](https://www.docker.com/)
+- [DropzoneJS](https://www.dropzone.dev/)
+- [Flowbite](https://flowbite.com/)
+- [Laravel](https://laravel.com/)
+- [Node JS](https://nodejs.org/en)
+- [Mozilla PDFJS](https://mozilla.github.io/pdf.js/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Vite JS](https://vitejs.dev/)
 
 ---
 
@@ -202,4 +201,4 @@ The HANA PDF is a open source Laravel Project that has licensed under the [MIT l
 
 ---
 
-## HANA-CI Build Project 2016 - 2025
+## HANA-CI Build Project 2016 - 2026
