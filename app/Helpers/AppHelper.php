@@ -95,9 +95,9 @@ class AppHelper
     }
 
     function getFtpResponse($download_file, $proc_file){
-        $ftp_server = env('FTP_SERVER');
+        $ftp_server = env('FTP_HOST');
         $ftp_conn = ftp_connect($ftp_server);
-        $login = ftp_login($ftp_conn, env('FTP_USERNAME'), env('FTP_USERPASS'));
+        $login = ftp_login($ftp_conn, env('FTP_USERNAME'), env('FTP_PASSWORD'));
         $login_pasv = ftp_pasv($ftp_conn, true);
 
         if (ftp_size($ftp_conn, $proc_file) != -1) {
