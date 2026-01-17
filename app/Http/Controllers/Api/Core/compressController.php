@@ -160,9 +160,6 @@ class compressController extends Controller
                                 $minioUpload
                             );
                             $newFilePath = Storage::disk('local')->path($pdfUpload_Location.'/'.$currentFileName);
-                            $ilovepdfTask->setFileEncryption($pdfEncKey);
-                            $ilovepdfTask->setEncryptKey($pdfEncKey);
-                            $ilovepdfTask->setEncryption(true);
                             $pdfFile = $ilovepdfTask->addFile($newFilePath);
                             Storage::disk('local')->delete($pdfUpload_Location.'/'.$currentFileName);
                             $pdfFile->setPassword($pdfEncKey);
