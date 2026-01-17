@@ -4,7 +4,7 @@
     "versioning": {
       "majorVersion": 3,
       "minorVersion": 7,
-      "patchVersion": 5
+      "patchVersion": 6
     }
   },
   {
@@ -12,7 +12,7 @@
     "versioning": {
       "majorVersion": 3,
       "minorVersion": 4,
-      "patchVersion": 8
+      "patchVersion": 9
     }
   }
 ]

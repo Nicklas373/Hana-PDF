@@ -1,11 +1,12 @@
 [
   {
-    "release_date": "November, 08 2025",
-    "version": "3.7.5-BE",
+    "release_date": "January, 18 2026",
+    "version": "3.4.9",
     "changelog": [
-      "Fix HtmlToPDF database transaction due wrong filename on where condition",
-      "Fix Majority core function issue after new dependencies updates",
-      "Updating our internal libraries and instances to latest version"
+      "Fix issue on PDF Compress due mistaken code on backend logic",
+      "Fix issue on PDF Into other format conversion logic",
+      "Fix issue on HTML to PDF error in some cases",
+      "Major update for our internal frameworks to latest version"
     ]
   },
   {
