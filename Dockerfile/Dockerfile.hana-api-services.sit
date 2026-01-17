@@ -1,9 +1,9 @@
-# Use php:8.4.8RC1-fpm-alpine as base image
-FROM php:8.4.8RC1-fpm-alpine
+# Use php:8.5-fpm-alpine3.22 as base image
+FROM php:8.5-fpm-alpine3.22
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="2.1"
+LABEL version="2.2"
 LABEL description="Docker container for https://gw.hana-ci.com"
 
 # Configure work directory
@@ -37,7 +37,7 @@ RUN apk add --no-cache \
     nano
 
 # Install Imagick extension
-RUN cd /tmp && curl -L -o /tmp/imagick.tar.gz https://pecl.php.net/get/imagick-3.8.0.tgz \
+RUN cd /tmp && curl -L -o /tmp/imagick.tar.gz https://pecl.php.net/get/imagick-3.8.1.tgz \
     && tar --strip-components=1 -xf /tmp/imagick.tar.gz \
     && phpize \
     && ./configure \
@@ -104,10 +104,10 @@ RUN cd hanaci-api && echo "TELEGRAM_CHAT_ID=xxxx" >> .env
 RUN cd hanaci-api && echo "HANA_UNIQUE_KEY=xxxx" >> .env
 RUN cd hanaci-api && echo "MINIO_ACCESS_KEY=xxxx" >> .env
 RUN cd hanaci-api && echo "MINIO_SECRET_KEY=xxxx" >> .env
-RUN cd hanaci-api && echo "MINIO_REGION=us-east-1" >> .env
-RUN cd hanaci-api && echo "MINIO_BUCKET=hana-pdf-sit" >> .env
+RUN cd hanaci-api && echo "MINIO_REGION=xxxx" >> .env
+RUN cd hanaci-api && echo "MINIO_BUCKET=xxxx" >> .env
 RUN cd hanaci-api && echo "MINIO_ENDPOINT=xxxx" >> .env
-RUN cd hanaci-api && echo "JWT_SECRET=xxx" >> .env
+RUN cd hanaci-api && echo "JWT_SECRET=xxxx" >> .env
 RUN cd hanaci-api && echo "JWT_ALGO=HS256" >> .env
 
 # Configure permission

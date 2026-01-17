@@ -1,9 +1,9 @@
-# Use php:8.4.8RC1-fpm-alpine as base image
-FROM php:8.4.8RC1-fpm-alpine
+# Use php:8.5-fpm-alpine3.22 as base image
+FROM php:8.5-fpm-alpine3.22
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.7"
+LABEL version="1.8"
 LABEL description="Docker application image for HANA PDF Apps"
 
 # Configure work directory
