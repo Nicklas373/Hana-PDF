@@ -27,15 +27,6 @@
             </div>
         </div>
         <div class="flex flex-col mx-2 mb-6 lg:mx-1.5 lg:mb-8">
-            <label for="pageSize" class="block mb-2 font-quicksand text-xl font-bold text-pc4">Size</label>
-            <select id="pageSize" class="appearance-none bg-transparent w-full border-2 border-lt backdrop-filter backdrop-blur-md rounded-lg bg-opacity-50 p-2 mt-2 font-semibold text-md text-lt1 font-quicksand focus:ring-lt focus:border-lt lg:mx-0 lg:w-3/6">
-                <option value="A3">A3</option>
-                <option value="A4">A4</option>
-                <option value="A5">A5</option>
-                <option value="Letter">Letter</option>
-            </select>
-        </div>
-        <div class="flex flex-col mx-2 mb-6 lg:mx-1.5 lg:mb-8">
             <label for="firstRadio" class="block mb-2 font-quicksand text-xl font-bold text-pc4">Orientation</label>
             <ul class="grid grid-cols-1 lg:grid-cols-2 xl:flex-row mt-2 lg:mt-0 mb-4 lg:w-3/6 lg:gap-2">
                 <li id="firstCol" class="bg-transparent border-2 border-lt backdrop-filter backdrop-blur-md rounded-lg bg-opacity-50 p-2 mt-2 mx-2 lg:mx-0">
@@ -61,15 +52,6 @@
                     </div>
                 </li>
             </ul>
-        </div>
-        <div id="isSinglePage" class="mx-2 mb-6 lg:mx-1.5">
-            <div class="flex flex-row">
-                <input id="isSinglePageText" aria-describedby="isSinglePageText" name="isMosaic" type="checkbox" class="h-4 w-4 mt-1 rounded-md border-ac text-ac focus:ring-2 focus:ring-ac">
-                <div class="ml-2 text-sm">
-                    <label for="isSinglePageText" class="block mb-2 font-quicksand text-xl font-bold text-pc4">Set Single Page</label>
-                    <p id="isSinglePageTextSuv" class="block mb-2 font-quicksand text-sm font-semibold text-pc4">Website will be converted into single page, instead of being separated by PDF pages.</p>
-                </div>
-            </div>
         </div>
         <div class="flex flex-col mt-2 w-full lg:mx-1.5 lg:w-full">
             <div dir="ltl">

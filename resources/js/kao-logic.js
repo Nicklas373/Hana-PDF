@@ -29,7 +29,7 @@ const options = {
 const adobeClientID = "STATIC_CLIENT_ID";
 const appMajorVer = 3;
 const appMinorVer = 4;
-const appPatchVer = 6;
+const appPatchVer = 7;
 const apiUrl = "STATIC_API";
 const bearerToken = "STATIC_BEARER";
 const errModal = new Modal($errModal, options);
@@ -113,7 +113,7 @@ if (procBtn) {
                                         xhrScsUploads +
                                             " of " +
                                             xhrTotalUploads +
-                                            " documents are still uploading"
+                                            " documents are still uploading",
                                     );
                                     errAltSubMessageModal.style = null;
                                     loadingModal.hide();
@@ -185,7 +185,7 @@ if (whatsNewBtn) {
         fetchVersion()
             .then((data) => {
                 const versionHistoryLayout = document.getElementById(
-                    "versionHistoryLayout"
+                    "versionHistoryLayout",
                 );
                 versionHistoryLayout.innerHTML = "";
                 data.versionFetchResponse.forEach((versionInfo, index) => {
@@ -330,7 +330,7 @@ if (uploadDropzone) {
                             .classList.add("hidden");
                         uploadDropzone.hiddenFileInput.setAttribute(
                             "disabled",
-                            "disabled"
+                            "disabled",
                         );
                     } else {
                         document
@@ -338,7 +338,7 @@ if (uploadDropzone) {
                             .classList.remove("hidden");
                         uploadDropzone.hiddenFileInput.removeAttribute(
                             "disabled",
-                            "disabled"
+                            "disabled",
                         );
                     }
 
@@ -355,10 +355,10 @@ if (uploadDropzone) {
                                 event.target.closest(".dz-file-preview");
                             var filenameElement =
                                 parentContainer.querySelector(
-                                    ".dz-filename span"
+                                    ".dz-filename span",
                                 );
                             var uploadedFile1 = fileNameFormat(
-                                filenameElement.innerText
+                                filenameElement.innerText,
                             );
                             getTemporaryURL(uploadedFile1)
                                 .then(function (temporaryURL) {
@@ -382,7 +382,7 @@ if (uploadDropzone) {
                                             embedMode: "SIZED_CONTAINER",
                                             focusOnRendering: true,
                                             showDownloadPDF: false,
-                                        }
+                                        },
                                     );
                                     previewModal.show();
                                 })
@@ -393,7 +393,7 @@ if (uploadDropzone) {
                                         "Error message";
                                     resetErrListMessage();
                                     generateMesssage(
-                                        temporaryURL.temporaryError
+                                        temporaryURL.temporaryError,
                                     );
                                     errAltSubMessageModal.style = null;
                                     previewDocumentModal.hide();
@@ -420,7 +420,7 @@ if (uploadDropzone) {
                             ) {
                                 uploadDropzone.hiddenFileInput.removeAttribute(
                                     "disabled",
-                                    "disabled"
+                                    "disabled",
                                 );
                                 document
                                     .getElementById("dropzoneUiExt")
@@ -451,13 +451,13 @@ if (uploadDropzone) {
                     if (xhrScsUploads > 0) {
                         let dzErrorMessage =
                             file.previewElement.querySelector(
-                                ".dz-error-message"
+                                ".dz-error-message",
                             );
                         if (dzErrorMessage.textContent == "") {
                             xhrScsUploads = xhrScsUploads - 1;
                         }
                         uploadedFile = uploadedFile.filter(
-                            (item) => !fileNameFormat(file.name).includes(item)
+                            (item) => !fileNameFormat(file.name).includes(item),
                         );
                     }
 
@@ -482,7 +482,7 @@ if (uploadDropzone) {
                         .catch((error) => {
                             console.error(
                                 "Error: Failed to remove file: ",
-                                error
+                                error,
                             );
                         });
                 } else {
@@ -537,7 +537,7 @@ if (uploadDropzone) {
             this.on("timeout", function (file) {
                 uploadDropzone.removeFile(file);
                 uploadedFile = uploadedFile.filter(
-                    (item) => !fileNameFormat(file.name).includes(item)
+                    (item) => !fileNameFormat(file.name).includes(item),
                 );
                 errMessage.innerText = "Connection timeout !";
                 errSubMessage.innerText = "Please try again later";
@@ -663,7 +663,7 @@ if (uploadDropzoneAlt) {
                         .classList.add("hidden");
                     uploadDropzoneAlt.hiddenFileInput.setAttribute(
                         "disabled",
-                        "disabled"
+                        "disabled",
                     );
                 } else {
                     Object.assign(procBtn.style, {
@@ -675,7 +675,7 @@ if (uploadDropzoneAlt) {
                         .classList.remove("hidden");
                     uploadDropzoneAlt.hiddenFileInput.removeAttribute(
                         "disabled",
-                        "disabled"
+                        "disabled",
                     );
                 }
 
@@ -688,7 +688,7 @@ if (uploadDropzoneAlt) {
                         var filenameElement =
                             parentContainer.querySelector(".dz-filename span");
                         var uploadedFile1 = fileNameFormat(
-                            filenameElement.innerText
+                            filenameElement.innerText,
                         );
                         getTemporaryURL(uploadedFile1)
                             .then(function (temporaryURL) {
@@ -731,7 +731,7 @@ if (uploadDropzoneAlt) {
                         ) {
                             uploadDropzoneAlt.hiddenFileInput.removeAttribute(
                                 "disabled",
-                                "disabled"
+                                "disabled",
                             );
                             document
                                 .getElementById("dropzoneUiExt")
@@ -761,13 +761,13 @@ if (uploadDropzoneAlt) {
                     if (xhrScsUploads > 0) {
                         let dzErrorMessage =
                             file.previewElement.querySelector(
-                                ".dz-error-message"
+                                ".dz-error-message",
                             );
                         if (dzErrorMessage.textContent == "") {
                             xhrScsUploads = xhrScsUploads - 1;
                         }
                         uploadedFile = uploadedFile.filter(
-                            (item) => !fileNameFormat(file.name).includes(item)
+                            (item) => !fileNameFormat(file.name).includes(item),
                         );
                     }
 
@@ -792,7 +792,7 @@ if (uploadDropzoneAlt) {
                         .catch((error) => {
                             console.error(
                                 "Error: Failed to remove file: ",
-                                error
+                                error,
                             );
                         });
                 } else {
@@ -826,11 +826,11 @@ if (uploadDropzoneAlt) {
                                 "application/vnd.openxmlformats-officedocument.presentationml.presentation"
                             )
                                 file.previewElement.querySelector(
-                                    ".dz-image-thumbnail"
+                                    ".dz-image-thumbnail",
                                 ).src = "/assets/icons/placeholder_pptx.svg";
                             else
                                 file.previewElement.querySelector(
-                                    ".dz-image-thumbnail"
+                                    ".dz-image-thumbnail",
                                 ).src = thumbnailURL;
                         })
                         .catch(function () {
@@ -841,7 +841,7 @@ if (uploadDropzoneAlt) {
                                 .querySelector("#imgThumbnail")
                                 .classList.remove("hidden");
                             file.previewElement.querySelector(
-                                ".dz-image-thumbnail"
+                                ".dz-image-thumbnail",
                             ).src = "/assets/icons/placeholder_pptx.svg";
                         });
                 } else if (file.type.startsWith("image/")) {
@@ -855,7 +855,7 @@ if (uploadDropzoneAlt) {
                                 .classList.remove("hidden");
                             var newUrl = temporaryURL.temporaryURL;
                             file.previewElement.querySelector(
-                                ".dz-image-thumbnail"
+                                ".dz-image-thumbnail",
                             ).src = newUrl;
                         })
                         .catch(function (temporaryURL) {
@@ -866,7 +866,7 @@ if (uploadDropzoneAlt) {
                                 .querySelector("#imgThumbnail")
                                 .classList.remove("hidden");
                             file.previewElement.querySelector(
-                                ".dz-image-thumbnail"
+                                ".dz-image-thumbnail",
                             ).src = "/assets/icons/placeholder_pptx.svg";
                             errMessage.innerText = `Failed to generated thumbnail for ${file.name}`;
                             errSubMessage.innerText = "";
@@ -922,7 +922,7 @@ if (uploadDropzoneAlt) {
             this.on("timeout", function (file) {
                 uploadDropzoneAlt.removeFile(file);
                 uploadedFile = uploadedFile.filter(
-                    (item) => !fileNameFormat(file.name).includes(item)
+                    (item) => !fileNameFormat(file.name).includes(item),
                 );
                 file.previewElement
                     .querySelector("#loadingThumbnail")
@@ -1048,7 +1048,7 @@ if (uploadDropzoneSingle) {
                             .classList.add("hidden");
                         uploadDropzoneSingle.hiddenFileInput.setAttribute(
                             "disabled",
-                            "disabled"
+                            "disabled",
                         );
                     } else {
                         document
@@ -1056,7 +1056,7 @@ if (uploadDropzoneSingle) {
                             .classList.remove("hidden");
                         uploadDropzoneSingle.hiddenFileInput.removeAttribute(
                             "disabled",
-                            "disabled"
+                            "disabled",
                         );
                     }
 
@@ -1073,10 +1073,10 @@ if (uploadDropzoneSingle) {
                                 event.target.closest(".dz-file-preview");
                             var filenameElement =
                                 parentContainer.querySelector(
-                                    ".dz-filename span"
+                                    ".dz-filename span",
                                 );
                             var uploadedFile1 = fileNameFormat(
-                                filenameElement.innerText
+                                filenameElement.innerText,
                             );
                             getTemporaryURL(uploadedFile1)
                                 .then(function (temporaryURL) {
@@ -1100,7 +1100,7 @@ if (uploadDropzoneSingle) {
                                             embedMode: "SIZED_CONTAINER",
                                             focusOnRendering: true,
                                             showDownloadPDF: false,
-                                        }
+                                        },
                                     );
                                     previewModal.show();
                                 })
@@ -1111,7 +1111,7 @@ if (uploadDropzoneSingle) {
                                         "Error message";
                                     resetErrListMessage();
                                     generateMesssage(
-                                        temporaryURL.temporaryError
+                                        temporaryURL.temporaryError,
                                     );
                                     errAltSubMessageModal.style = null;
                                     previewDocumentModal.hide();
@@ -1131,7 +1131,7 @@ if (uploadDropzoneSingle) {
                             if (uploadDropzoneSingle.files.length >= 1) {
                                 uploadDropzoneSingle.hiddenFileInput.removeAttribute(
                                     "disabled",
-                                    "disabled"
+                                    "disabled",
                                 );
                                 document
                                     .getElementById("dropzoneUiExt")
@@ -1165,13 +1165,13 @@ if (uploadDropzoneSingle) {
                     if (xhrScsUploads > 0) {
                         let dzErrorMessage =
                             file.previewElement.querySelector(
-                                ".dz-error-message"
+                                ".dz-error-message",
                             );
                         if (dzErrorMessage.textContent == "") {
                             xhrScsUploads = xhrScsUploads - 1;
                         }
                         uploadedFile = uploadedFile.filter(
-                            (item) => !fileNameFormat(file.name).includes(item)
+                            (item) => !fileNameFormat(file.name).includes(item),
                         );
                     }
 
@@ -1196,7 +1196,7 @@ if (uploadDropzoneSingle) {
                         .catch((error) => {
                             console.error(
                                 "Error: Failed to remove file: ",
-                                error
+                                error,
                             );
                         });
                 } else {
@@ -1250,7 +1250,7 @@ if (uploadDropzoneSingle) {
             this.on("timeout", function (file) {
                 uploadDropzoneSingle.removeFile(file);
                 uploadedFile = uploadedFile.filter(
-                    (item) => !fileNameFormat(file.name).includes(item)
+                    (item) => !fileNameFormat(file.name).includes(item),
                 );
                 errMessage.innerText = "Connection timeout !";
                 errSubMessage.innerText = "Please try again later";
@@ -1386,7 +1386,7 @@ function generatePdfThumbnail(file) {
                                     canvas.toDataURL("image/jpeg");
                                 const previewElement = file.previewElement;
                                 const dzImage = previewElement.querySelector(
-                                    ".dz-image-thumbnail"
+                                    ".dz-image-thumbnail",
                                 );
                                 dzImage.src = thumbnail;
                             })
@@ -1508,8 +1508,8 @@ function generateThumbnail(fileName) {
                         new Error(
                             "API response error: " + xhrReturn.errors ||
                                 xhrReturn.message ||
-                                "Internal Server Error"
-                        )
+                                "Internal Server Error",
+                        ),
                     );
                 }
             } catch (e) {
@@ -1733,7 +1733,7 @@ function handleFormDataSTA(files, proc, action) {
     if (proc == "compress") {
         formData.append(
             "compMethod",
-            document.querySelector('input[name="compMethod"]:checked').value
+            document.querySelector('input[name="compMethod"]:checked').value,
         );
     } else if (proc == "convert") {
         if (document.getElementById("cnvToPDF") !== null) {
@@ -1741,7 +1741,7 @@ function handleFormDataSTA(files, proc, action) {
             formData.append("extImage", false.toString());
         } else if (document.getElementById("cnvFrPDF") !== null) {
             var cnvValue = document.querySelector(
-                'input[name="convertType"]:checked'
+                'input[name="convertType"]:checked',
             ).value;
             var imgValue = document.getElementById("extImage");
             if (imgValue.checked) {
@@ -1784,11 +1784,11 @@ function handleFormDataSTA(files, proc, action) {
             let wmLayoutStyle;
             var imgFile = document.getElementById("wm_file_input").files[0];
             var wmRotation = document.getElementById(
-                "watermarkImageRotation"
+                "watermarkImageRotation",
             ).value;
             var wmPage = document.getElementById("watermarkPageImage").value;
             var wmTransparency = document.getElementById(
-                "watermarkImageTransparency"
+                "watermarkImageTransparency",
             ).value;
             var wmMosaic = document.getElementById("isMosaicImage").checked;
             if (
@@ -1796,18 +1796,18 @@ function handleFormDataSTA(files, proc, action) {
                 true
             ) {
                 wmLayoutStyle = document.getElementById(
-                    "wmRadioImageLayoutStyleA"
+                    "wmRadioImageLayoutStyleA",
                 ).value;
             } else if (
                 document.getElementById("wmRadioImageLayoutStyleB").checked ==
                 true
             ) {
                 wmLayoutStyle = document.getElementById(
-                    "wmRadioImageLayoutStyleB"
+                    "wmRadioImageLayoutStyleB",
                 ).value;
             } else {
                 wmLayoutStyle = document.getElementById(
-                    "wmRadioImageLayoutStyleA"
+                    "wmRadioImageLayoutStyleA",
                 ).value;
             }
             formData.append("action", action);
@@ -1827,35 +1827,35 @@ function handleFormDataSTA(files, proc, action) {
             var wmFontColor =
                 document.getElementById("watermarkFontColor").value;
             var wmFontFamily = document.getElementById(
-                "watermarkFontFamily"
+                "watermarkFontFamily",
             ).value;
             var wmFontSize = document.getElementById("watermarkFontSize").value;
             var wmFontStyle =
                 document.getElementById("watermarkFontStyle").value;
             var wmRotation = document.getElementById(
-                "watermarkTextRotation"
+                "watermarkTextRotation",
             ).value;
             var wmPage = document.getElementById("watermarkPageText").value;
             var wmText = document.getElementById("watermarkText").value;
             var wmTransparency = document.getElementById(
-                "watermarkTextTransparency"
+                "watermarkTextTransparency",
             ).value;
             var wmMosaic = document.getElementById("isMosaicText").checked;
             if (
                 document.getElementById("wmRadioLayoutStyleA").checked == true
             ) {
                 wmLayoutStyle = document.getElementById(
-                    "wmRadioLayoutStyleA"
+                    "wmRadioLayoutStyleA",
                 ).value;
             } else if (
                 document.getElementById("wmRadioLayoutStyleB").checked == true
             ) {
                 wmLayoutStyle = document.getElementById(
-                    "wmRadioLayoutStyleB"
+                    "wmRadioLayoutStyleB",
                 ).value;
             } else {
                 wmLayoutStyle = document.getElementById(
-                    "wmRadioLayoutStyleA"
+                    "wmRadioLayoutStyleA",
                 ).value;
             }
             formData.append("action", action);
@@ -1874,16 +1874,12 @@ function handleFormDataSTA(files, proc, action) {
     } else if (proc == "html") {
         var urlValue = document.getElementById("urlToPDF").value;
         var urlMarginValue = document.getElementById("pageMargin").value;
-        var urlSizeValue = document.getElementById("pageSize").value;
         var urlPageOrientation = document.querySelector(
-            'input[name="pageOrientation"]:checked'
+            'input[name="pageOrientation"]:checked',
         ).value;
-        var urlSinglePage = document.getElementById("isSinglePageText").checked;
         formData.append("urlToPDF", urlValue);
         formData.append("urlMarginValue", urlMarginValue);
-        formData.append("urlSizeValue", urlSizeValue);
         formData.append("urlPageOrientationValue", urlPageOrientation);
-        formData.append("urlSinglePage", urlSinglePage);
     }
     if (proc !== "html") {
         formData.append("batch", files.length > 1);
@@ -1937,9 +1933,8 @@ function scsInterfaceSTA(xhrReturn, proc) {
         document.getElementById("scsMsgResult").textContent = `
         Compressed to ${xhrReturn.newFileSize} with ${xhrReturn.compMethod} compression level.`;
     } else {
-        document.getElementById(
-            "scsMsgResult"
-        ).innerText = `Download the file or PDF below.`;
+        document.getElementById("scsMsgResult").innerText =
+            `Download the file or PDF below.`;
     }
     document.getElementById("scsMsgLink").href = `${xhrReturn.fileSource}`;
     document.getElementById("scsMsgLink").innerText = "Download PDF";
@@ -2037,7 +2032,7 @@ function submit(event) {
                             generateMesssage(
                                 "Remaining monthly limit (" +
                                     xhrBalanceRemaining +
-                                    " out of 2500)"
+                                    " out of 2500)",
                             );
                             errAltSubMessageModal.style = null;
                             loadingModal.hide();
@@ -2125,7 +2120,7 @@ function submit(event) {
                     generateMesssage(
                         "Remaining monthly limit (" +
                             xhrBalanceRemaining +
-                            " out of 2500)"
+                            " out of 2500)",
                     );
                     errAltSubMessageModal.style = null;
                     loadingModal.hide();
@@ -2177,7 +2172,7 @@ function submit(event) {
                         generateMesssage(
                             "Minimum document to merge is 2 (Total files: " +
                                 getUploadedFileName().length +
-                                ")"
+                                ")",
                         );
                         loadingModal.hide();
                         errModal.show();
@@ -2203,7 +2198,7 @@ function submit(event) {
                 generateMesssage(
                     "Remaining monthly limit (" +
                         xhrBalanceRemaining +
-                        " out of 2500)"
+                        " out of 2500)",
                 );
                 errAltSubMessageModal.style = null;
                 loadingModal.hide();
@@ -2268,7 +2263,7 @@ function submit(event) {
                                         errAltSubMessageModal.style = null;
                                         resetErrListMessage();
                                         generateMesssage(
-                                            "Page number can not use negative number"
+                                            "Page number can not use negative number",
                                         );
                                         firstPage.style.borderColor = "#A84E4E";
                                         loadingModal.hide();
@@ -2286,7 +2281,7 @@ function submit(event) {
                                         errAltSubMessageModal.style = null;
                                         resetErrListMessage();
                                         generateMesssage(
-                                            "Page number can not use negative number"
+                                            "Page number can not use negative number",
                                         );
                                         lastPage.style.borderColor = "#A84E4E";
                                         loadingModal.hide();
@@ -2295,8 +2290,8 @@ function submit(event) {
                                         if (
                                             parseInt(
                                                 document.getElementById(
-                                                    "fromPage"
-                                                ).value
+                                                    "fromPage",
+                                                ).value,
                                             ) > totalPages.totalPagesMessage
                                         ) {
                                             event.preventDefault();
@@ -2307,7 +2302,7 @@ function submit(event) {
                                             errAltSubMessageModal.style = null;
                                             resetErrListMessage();
                                             generateMesssage(
-                                                "First page can not be more than total page"
+                                                "First page can not be more than total page",
                                             );
                                             firstPage.style.borderColor =
                                                 "#A84E4E";
@@ -2316,8 +2311,8 @@ function submit(event) {
                                         } else if (
                                             parseInt(
                                                 document.getElementById(
-                                                    "toPage"
-                                                ).value
+                                                    "toPage",
+                                                ).value,
                                             ) > totalPages.totalPagesMessage
                                         ) {
                                             event.preventDefault();
@@ -2328,7 +2323,7 @@ function submit(event) {
                                             errAltSubMessageModal.style = null;
                                             resetErrListMessage();
                                             generateMesssage(
-                                                "Last page can not be more than total page"
+                                                "Last page can not be more than total page",
                                             );
                                             lastPage.style.borderColor =
                                                 "#A84E4E";
@@ -2338,13 +2333,13 @@ function submit(event) {
                                             if (
                                                 parseInt(
                                                     document.getElementById(
-                                                        "fromPage"
-                                                    ).value
+                                                        "fromPage",
+                                                    ).value,
                                                 ) >
                                                 parseInt(
                                                     document.getElementById(
-                                                        "toPage"
-                                                    ).value
+                                                        "toPage",
+                                                    ).value,
                                                 )
                                             ) {
                                                 event.preventDefault();
@@ -2356,7 +2351,7 @@ function submit(event) {
                                                     null;
                                                 resetErrListMessage();
                                                 generateMesssage(
-                                                    "First page can not be more than last page"
+                                                    "First page can not be more than last page",
                                                 );
                                                 firstPage.style.borderColor =
                                                     "#A84E4E";
@@ -2365,13 +2360,13 @@ function submit(event) {
                                             } else if (
                                                 parseInt(
                                                     document.getElementById(
-                                                        "toPage"
-                                                    ).value
+                                                        "toPage",
+                                                    ).value,
                                                 ) <
                                                 parseInt(
                                                     document.getElementById(
-                                                        "fromPage"
-                                                    ).value
+                                                        "fromPage",
+                                                    ).value,
                                                 )
                                             ) {
                                                 event.preventDefault();
@@ -2383,7 +2378,7 @@ function submit(event) {
                                                     null;
                                                 resetErrListMessage();
                                                 generateMesssage(
-                                                    "Last page can not be less than first page"
+                                                    "Last page can not be less than first page",
                                                 );
                                                 firstPage.style.borderColor =
                                                     "#A84E4E";
@@ -2393,13 +2388,13 @@ function submit(event) {
                                             if (
                                                 parseInt(
                                                     document.getElementById(
-                                                        "fromPage"
-                                                    ).value
+                                                        "fromPage",
+                                                    ).value,
                                                 ) == 0 ||
                                                 parseInt(
                                                     document.getElementById(
-                                                        "toPage"
-                                                    ).value
+                                                        "toPage",
+                                                    ).value,
                                                 ) == 0
                                             ) {
                                                 event.preventDefault();
@@ -2411,7 +2406,7 @@ function submit(event) {
                                                     null;
                                                 resetErrListMessage();
                                                 generateMesssage(
-                                                    "First or last page can't be empty or zero"
+                                                    "First or last page can't be empty or zero",
                                                 );
                                                 firstPage.style.borderColor =
                                                     "#A84E4E";
@@ -2438,22 +2433,22 @@ function submit(event) {
                                                         "Processing document";
                                                     document
                                                         .getElementById(
-                                                            "altLoadingModal"
+                                                            "altLoadingModal",
                                                         )
                                                         .classList.remove(
-                                                            "hidden"
+                                                            "hidden",
                                                         );
                                                     document
                                                         .getElementById(
-                                                            "dropzoneSplit"
+                                                            "dropzoneSplit",
                                                         )
                                                         .classList.add(
-                                                            "animate-pulse"
+                                                            "animate-pulse",
                                                         );
                                                     xhrProcStats = false;
                                                     apiGateway(
                                                         "split",
-                                                        "split"
+                                                        "split",
                                                     );
                                                 } else {
                                                     event.preventDefault();
@@ -2467,7 +2462,7 @@ function submit(event) {
                                                     generateMesssage(
                                                         "Remaining monthly limit (" +
                                                             xhrBalanceRemaining +
-                                                            " out of 2500)"
+                                                            " out of 2500)",
                                                     );
                                                     errAltSubMessageModal.style =
                                                         null;
@@ -2528,7 +2523,7 @@ function submit(event) {
                                         "Error message";
                                     resetErrListMessage();
                                     generateMesssage(
-                                        "Split selected page logic error"
+                                        "Split selected page logic error",
                                     );
                                     errAltSubMessageModal.style = null;
                                     loadingModal.hide();
@@ -2557,7 +2552,7 @@ function submit(event) {
                             document.getElementById("customPageSplit").value;
                         if (!Number.isNaN(cusPageValue)) {
                             getTotalPages(
-                                getUploadedFileName()[0].replace(/\s/g, "_")
+                                getUploadedFileName()[0].replace(/\s/g, "_"),
                             )
                                 .then((totalPages) => {
                                     if (totalPages.totalPages == false) {
@@ -2569,7 +2564,7 @@ function submit(event) {
                                         errAltSubMessageModal.style = null;
                                         resetErrListMessage();
                                         generateMesssage(
-                                            totalPages.totalPagesError
+                                            totalPages.totalPagesError,
                                         );
                                         loadingModal.hide();
                                         errModal.show();
@@ -2586,7 +2581,7 @@ function submit(event) {
                                             errAltSubMessageModal.style = null;
                                             resetErrListMessage();
                                             generateMesssage(
-                                                "Custom page can not be more than total page"
+                                                "Custom page can not be more than total page",
                                             );
                                             customPage.style.borderColor =
                                                 "#A84E4E";
@@ -2603,7 +2598,7 @@ function submit(event) {
                                             errAltSubMessageModal.style = null;
                                             resetErrListMessage();
                                             generateMesssage(
-                                                "Custom page can not be empty or zero"
+                                                "Custom page can not be empty or zero",
                                             );
                                             customPage.style.borderColor =
                                                 "#A84E4E";
@@ -2628,15 +2623,15 @@ function submit(event) {
                                                     "Processing document";
                                                 document
                                                     .getElementById(
-                                                        "altLoadingModal"
+                                                        "altLoadingModal",
                                                     )
                                                     .classList.remove("hidden");
                                                 document
                                                     .getElementById(
-                                                        "dropzoneSplit"
+                                                        "dropzoneSplit",
                                                     )
                                                     .classList.add(
-                                                        "animate-pulse"
+                                                        "animate-pulse",
                                                     );
                                                 xhrProcStats = false;
                                                 apiGateway("split", "split");
@@ -2651,7 +2646,7 @@ function submit(event) {
                                                 generateMesssage(
                                                     "Remaining monthly limit (" +
                                                         xhrBalanceRemaining +
-                                                        " out of 2500)"
+                                                        " out of 2500)",
                                                 );
                                                 errAltSubMessageModal.style =
                                                     null;
@@ -2702,7 +2697,7 @@ function submit(event) {
                                 generateMesssage(
                                     "Remaining monthly limit (" +
                                         xhrBalanceRemaining +
-                                        " out of 2500)"
+                                        " out of 2500)",
                                 );
                                 errAltSubMessageModal.style = null;
                                 loadingModal.hide();
@@ -2745,7 +2740,7 @@ function submit(event) {
                         document.getElementById("customPageDelete").value;
                     if (!Number.isNaN(cusPageValue)) {
                         getTotalPages(
-                            getUploadedFileName()[0].replace(/\s/g, "_")
+                            getUploadedFileName()[0].replace(/\s/g, "_"),
                         )
                             .then((totalPages) => {
                                 if (totalPages.totalPages == false) {
@@ -2757,7 +2752,7 @@ function submit(event) {
                                     errAltSubMessageModal.style = null;
                                     resetErrListMessage();
                                     generateMesssage(
-                                        totalPages.totalPagesError
+                                        totalPages.totalPagesError,
                                     );
                                     loadingModal.hide();
                                     errModal.show();
@@ -2774,7 +2769,7 @@ function submit(event) {
                                         errAltSubMessageModal.style = null;
                                         resetErrListMessage();
                                         generateMesssage(
-                                            "Custom page can not be more than total page"
+                                            "Custom page can not be more than total page",
                                         );
                                         customPage.style.borderColor =
                                             "#A84E4E";
@@ -2789,7 +2784,7 @@ function submit(event) {
                                         errAltSubMessageModal.style = null;
                                         resetErrListMessage();
                                         generateMesssage(
-                                            "Custom page can not be empty or zero"
+                                            "Custom page can not be empty or zero",
                                         );
                                         customPage.style.borderColor =
                                             "#A84E4E";
@@ -2812,7 +2807,7 @@ function submit(event) {
                                                 "Processing document";
                                             document
                                                 .getElementById(
-                                                    "altLoadingModal"
+                                                    "altLoadingModal",
                                                 )
                                                 .classList.remove("hidden");
                                             document
@@ -2831,7 +2826,7 @@ function submit(event) {
                                             generateMesssage(
                                                 "Remaining monthly limit (" +
                                                     xhrBalanceRemaining +
-                                                    " out of 2500)"
+                                                    " out of 2500)",
                                             );
                                             errAltSubMessageModal.style = null;
                                             loadingModal.hide();
@@ -2879,7 +2874,7 @@ function submit(event) {
                             generateMesssage(
                                 "Remaining monthly limit (" +
                                     xhrBalanceRemaining +
-                                    " out of 2500)"
+                                    " out of 2500)",
                             );
                             errAltSubMessageModal.style = null;
                             loadingModal.hide();
@@ -2963,14 +2958,14 @@ function submit(event) {
                                 loadingModal.show();
                                 var cusPageValue =
                                     document.getElementById(
-                                        "watermarkPageImage"
+                                        "watermarkPageImage",
                                     ).value;
                                 if (!Number.isNaN(cusPageValue)) {
                                     getTotalPages(
                                         getUploadedFileName()[0].replace(
                                             /\s/g,
-                                            "_"
-                                        )
+                                            "_",
+                                        ),
                                     )
                                         .then((totalPages) => {
                                             if (
@@ -2985,7 +2980,7 @@ function submit(event) {
                                                     null;
                                                 resetErrListMessage();
                                                 generateMesssage(
-                                                    totalPages.totalPagesError
+                                                    totalPages.totalPagesError,
                                                 );
                                                 loadingModal.hide();
                                                 errModal.show();
@@ -3003,7 +2998,7 @@ function submit(event) {
                                                         null;
                                                     resetErrListMessage();
                                                     generateMesssage(
-                                                        "Selected page can not be more than total page"
+                                                        "Selected page can not be more than total page",
                                                     );
                                                     customPage.style.borderColor =
                                                         "#A84E4E";
@@ -3021,7 +3016,7 @@ function submit(event) {
                                                         null;
                                                     resetErrListMessage();
                                                     generateMesssage(
-                                                        "Selected page can not be empty or zero"
+                                                        "Selected page can not be empty or zero",
                                                     );
                                                     customPage.style.borderColor =
                                                         "#A84E4E";
@@ -3036,22 +3031,22 @@ function submit(event) {
                                                             "Processing document";
                                                         document
                                                             .getElementById(
-                                                                "altLoadingModal"
+                                                                "altLoadingModal",
                                                             )
                                                             .classList.remove(
-                                                                "hidden"
+                                                                "hidden",
                                                             );
                                                         document
                                                             .getElementById(
-                                                                "dropzoneWatermark"
+                                                                "dropzoneWatermark",
                                                             )
                                                             .classList.add(
-                                                                "animate-pulse"
+                                                                "animate-pulse",
                                                             );
                                                         xhrProcStats = false;
                                                         apiGateway(
                                                             "watermark",
-                                                            "img"
+                                                            "img",
                                                         );
                                                     } else {
                                                         event.preventDefault();
@@ -3065,7 +3060,7 @@ function submit(event) {
                                                         generateMesssage(
                                                             "Remaining monthly limit (" +
                                                                 xhrBalanceRemaining +
-                                                                " out of 2500)"
+                                                                " out of 2500)",
                                                         );
                                                         errAltSubMessageModal.style =
                                                             null;
@@ -3084,7 +3079,7 @@ function submit(event) {
                                             errAltSubMessageModal.style = null;
                                             resetErrListMessage();
                                             generateMesssage(
-                                                error.totalPagesError
+                                                error.totalPagesError,
                                             );
                                             generateMesssage(error);
                                             loadingModal.hide();
@@ -3113,7 +3108,7 @@ function submit(event) {
                                         generateMesssage(
                                             "Remaining monthly limit (" +
                                                 xhrBalanceRemaining +
-                                                " out of 2500)"
+                                                " out of 2500)",
                                         );
                                         errAltSubMessageModal.style = null;
                                         loadingModal.hide();
@@ -3123,7 +3118,7 @@ function submit(event) {
                             } else {
                                 var wmPage =
                                     document.getElementById(
-                                        "watermarkPageImage"
+                                        "watermarkPageImage",
                                     );
                                 event.preventDefault();
                                 errMessage.innerText =
@@ -3146,7 +3141,7 @@ function submit(event) {
                         errListTitleMessage.innerText = "Error message";
                         resetErrListMessage();
                         generateMesssage(
-                            "Supported file format: JPG, PNG, JPEG"
+                            "Supported file format: JPG, PNG, JPEG",
                         );
                         errAltSubMessageModal.style = null;
                         loadingModal.hide();
@@ -3198,7 +3193,7 @@ function submit(event) {
                             document.getElementById("watermarkPageText").value;
                         if (!Number.isNaN(cusPageValue)) {
                             getTotalPages(
-                                getUploadedFileName()[0].replace(/\s/g, "_")
+                                getUploadedFileName()[0].replace(/\s/g, "_"),
                             )
                                 .then((totalPages) => {
                                     if (totalPages.totalPages == false) {
@@ -3210,7 +3205,7 @@ function submit(event) {
                                         errAltSubMessageModal.style = null;
                                         resetErrListMessage();
                                         generateMesssage(
-                                            totalPages.totalPagesError
+                                            totalPages.totalPagesError,
                                         );
                                         loadingModal.hide();
                                         errModal.show();
@@ -3227,7 +3222,7 @@ function submit(event) {
                                             errAltSubMessageModal.style = null;
                                             resetErrListMessage();
                                             generateMesssage(
-                                                "Selected page can not be more than total page"
+                                                "Selected page can not be more than total page",
                                             );
                                             customPage.style.borderColor =
                                                 "#A84E4E";
@@ -3244,7 +3239,7 @@ function submit(event) {
                                             errAltSubMessageModal.style = null;
                                             resetErrListMessage();
                                             generateMesssage(
-                                                "Selected page can not be empty or zero"
+                                                "Selected page can not be empty or zero",
                                             );
                                             customPage.style.borderColor =
                                                 "#A84E4E";
@@ -3259,15 +3254,15 @@ function submit(event) {
                                                     "Processing document";
                                                 document
                                                     .getElementById(
-                                                        "altLoadingModal"
+                                                        "altLoadingModal",
                                                     )
                                                     .classList.remove("hidden");
                                                 document
                                                     .getElementById(
-                                                        "dropzoneWatermark"
+                                                        "dropzoneWatermark",
                                                     )
                                                     .classList.add(
-                                                        "animate-pulse"
+                                                        "animate-pulse",
                                                     );
                                                 xhrProcStats = false;
                                                 apiGateway("watermark", "txt");
@@ -3282,7 +3277,7 @@ function submit(event) {
                                                 generateMesssage(
                                                     "Remaining monthly limit (" +
                                                         xhrBalanceRemaining +
-                                                        " out of 2500)"
+                                                        " out of 2500)",
                                                 );
                                                 errAltSubMessageModal.style =
                                                     null;
@@ -3326,7 +3321,7 @@ function submit(event) {
                                 generateMesssage(
                                     "Remaining monthly limit (" +
                                         xhrBalanceRemaining +
-                                        " out of 2500)"
+                                        " out of 2500)",
                                 );
                                 errAltSubMessageModal.style = null;
                                 loadingModal.hide();
@@ -3412,7 +3407,7 @@ function submit(event) {
                     generateMesssage(
                         "Remaining monthly limit (" +
                             xhrBalanceRemaining +
-                            " out of 2500)"
+                            " out of 2500)",
                     );
                     errAltSubMessageModal.style = null;
                     loadingModal.hide();
