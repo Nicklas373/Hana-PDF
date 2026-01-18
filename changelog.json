@@ -6,7 +6,8 @@
       "Fix issue on PDF Compress due mistaken code on backend logic",
       "Fix issue on PDF Into other format conversion logic",
       "Fix issue on HTML to PDF error in some cases",
-      "Major update for our internal frameworks to latest version"
+      "Major update for our internal frameworks to latest version",
+      "Update PDF JS to 5.4.149"
     ]
   },
   {
