@@ -1,6 +1,6 @@
 services:
     hana-app-pdf:
-        image: nicklas373/hana-app-pdf-sit:1.7
+        image: nicklas373/hana-app-pdf-sit:1.9
         container_name: "hana-app-pdf"
         cpus: 2.0
         mem_limit: 512M
@@ -18,7 +18,7 @@ services:
         depends_on:
             - hana-api-services
     hana-api-services:
-        image: nicklas373/hana-api-services-sit:2.1
+        image: nicklas373/hana-api-services-sit:2.2
         container_name: "hana-api-services"
         cpus: 2.0
         mem_limit: 512M
