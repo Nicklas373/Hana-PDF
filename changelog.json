@@ -1,5 +1,14 @@
 [
   {
+    "release_date": "April, 04 2026",
+    "version": "3.5.0",
+    "changelog": [
+      "Fix and return all previous capatibility for HTML to PDF pages",
+      "Major code and function fixing in all environment",
+      "Major update to our framework (Laravel 13.x, VITE JS 8.x)"
+    ]
+  },
+  {
     "release_date": "January, 18 2026",
     "version": "3.4.9",
     "changelog": [

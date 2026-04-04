@@ -11,8 +11,8 @@
     "appServices": "FE",
     "versioning": {
       "majorVersion": 3,
-      "minorVersion": 4,
-      "patchVersion": 9
+      "minorVersion": 5,
+      "patchVersion": 0
     }
   }
 ]
