@@ -3,8 +3,8 @@
     "appServices": "BE",
     "versioning": {
       "majorVersion": 3,
-      "minorVersion": 7,
-      "patchVersion": 6
+      "minorVersion": 8,
+      "patchVersion": 0
     }
   },
   {
