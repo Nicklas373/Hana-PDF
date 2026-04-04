@@ -1,4 +1,5 @@
-permissions: read-all
+permissions:
+  contents: read
 
 name: "HANA PDF Container [SIT]"
 
@@ -14,13 +15,13 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Cleanup Unused Docker Images
         run: docker rmi $(docker images -q) || true
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: nicklas373
           password: ${{ secrets.DOCKER_PAT }}
@@ -32,17 +33,17 @@ jobs:
             --build-arg JWT_TTL=${{ secrets.JWT_TTL }} \
             --build-arg DB_USERNAME=${{ secrets.DB_USERNAME }} \
             --build-arg DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -t nicklas373/hana-api-services-sit:1.9 \
+            -t nicklas373/hana-api-services-sit:2.3 \
             -f Dockerfile/Dockerfile.hana-api-services.sit \
             .
           mkdir -p api_image
-          docker save -o api_image/api_image.tar nicklas373/hana-api-services-sit:1.9
+          docker save -o api_image/api_image.tar nicklas373/hana-api-services-sit:2.3
 
       - name: Load Docker Images
         run: docker load -i api_image/api_image.tar
 
       - name: Deploy Docker Image to Docker Hub
-        run: docker push nicklas373/hana-api-services-sit:1.9
+        run: docker push nicklas373/hana-api-services-sit:2.3
 
       - name: Docker Success Notifications
         run: |
@@ -55,13 +56,13 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Cleanup Unused Docker Images
         run: docker rmi $(docker images -q) || true
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: nicklas373
           password: ${{ secrets.DOCKER_PAT }}
@@ -71,17 +72,17 @@ jobs:
           docker build \
             --build-arg DB_USERNAME=${{ secrets.DB_USERNAME }} \
             --build-arg DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -t nicklas373/hana-app-pdf-sit:2.2 \
+            -t nicklas373/hana-app-pdf-sit:1.8 \
             -f Dockerfile/Dockerfile.hana-app-pdf.sit \
             .
           mkdir -p pdf_image
-          docker save -o pdf_image/pdf_image.tar nicklas373/hana-app-pdf-sit:2.2
+          docker save -o pdf_image/pdf_image.tar nicklas373/hana-app-pdf-sit:1.8
 
       - name: Load Docker Images
         run: docker load -i pdf_image/pdf_image.tar
 
       - name: Deploy Docker Image to Docker Hub
-        run: docker push nicklas373/hana-app-pdf-sit:2.2
+        run: docker push nicklas373/hana-app-pdf-sit:1.8
 
       - name: Docker Success Notifications
         run: |

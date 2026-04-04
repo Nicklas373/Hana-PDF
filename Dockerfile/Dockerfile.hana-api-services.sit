@@ -3,7 +3,7 @@ FROM php:8.5-fpm-alpine3.22
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="2.2"
+LABEL version="2.3"
 LABEL description="Docker container for https://gw.hana-ci.com"
 
 # Configure work directory
@@ -114,6 +114,10 @@ RUN cd hanaci-api && echo "JWT_ALGO=HS256" >> .env
 RUN cd hanaci-api && \
     chmod o+w /var/www/html/hanaci-api/storage/ -R && \
     chmod o+w /var/www/html/hanaci-api/vendor/mpdf/mpdf/tmp/ -R
+
+# IlovePDF HACK
+RUN rm /var/www/html/hanaci-api/vendor/ilovepdf/ilovepdf-php/src/Task.php
+COPY module/hana-pdf/patch/iLovePDF/task.php /var/www/html/hanaci-api/vendor/ilovepdf/ilovepdf-php/src/Task.php
 
 # Configure Nginx Services
 RUN mkdir /etc/nginx/sites-enabled

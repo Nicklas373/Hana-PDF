@@ -1,6 +1,6 @@
 services:
     hana-app-pdf:
-        image: nicklas373/hana-app-pdf-sit:1.7
+        image: nicklas373/hana-app-pdf-sit:1.8
         container_name: "hana-app-pdf"
         cpus: 2.0
         mem_limit: 512M
@@ -18,7 +18,7 @@ services:
         depends_on:
             - hana-api-services
     hana-api-services:
-        image: nicklas373/hana-api-services-sit:2.1
+        image: nicklas373/hana-api-services-sit:2.3
         container_name: "hana-api-services"
         cpus: 2.0
         mem_limit: 512M
@@ -36,7 +36,7 @@ services:
         depends_on:
             - hana-db-services
     hana-minio:
-        image: minio/minio:latest
+        image: pgsty/minio:latest
         container_name: "hanaci-minio"
         cpus: 1.0
         mem_limit: 512M
@@ -55,7 +55,7 @@ services:
         MINIO_ROOT_PASSWORD: "eureka"
         command: server /data --console-address ":9001"
     hana-db-services:
-        image: postgres:17.4
+        image: postgres:18.3
         container_name: "hana-db-services"
         restart: unless-stopped
         cpus: 1.0

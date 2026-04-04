@@ -13,9 +13,11 @@ name: "CodeQL Advanced"
 
 on:
   push:
-    branches: ["fe/master", "dev/fe/master", "dev/fe/master-live"]
+    branches:
+      ["fe/master", "dev/fe/master", "dev/fe/master-live", "dev/be/master"]
   pull_request:
-    branches: ["fe/master", "dev/fe/master", "dev/fe/master-live"]
+    branches:
+      ["fe/master", "dev/fe/master", "dev/fe/master-live", "dev/be/master"]
   schedule:
     - cron: "0 0 * * 0"
 
