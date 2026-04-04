@@ -12,9 +12,10 @@ use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Ilovepdf\Ilovepdf;
+use Ilovepdf\HtmlpdfTask;
 
 class htmltopdfController extends Controller
 {
@@ -22,7 +23,9 @@ class htmltopdfController extends Controller
         $validator = Validator::make($request->all(),[
 		    'urlToPDF' => ['required', 'string'],
             'urlMarginValue' => ['required', 'numeric'],
+            'urlSizeValue' => ['required', 'in:A3,A4,A5,Letter'],
             'urlPageOrientationValue' => ['required', 'in:landscape,portrait'],
+            'urlSinglePage' => ['required', 'in:true,false']
 	    ]);
 
         // Generate Uni UUID
@@ -67,8 +70,10 @@ class htmltopdfController extends Controller
             $pdfProcessed_Location = env('PDF_DOWNLOAD');
             $pdfUpload_Location = env('PDF_UPLOAD');
             $pdfUrl = $request->post('urlToPDF');
-            $pdfMargin = $request->post('urlMarginValue');
             $pdfOrientation = $request->post('urlPageOrientationValue');
+            $pdfMargin = $request->post('urlMarginValue');
+            $pdfSize = $request->post('urlSizeValue');
+            $pdfSinglePage = $request->post('urlSinglePage');
             $newUrl = '';
             AppHelper::instance()->fileModelHelper($pdfDefaultFileName.'.pdf', null, $fileUuid, $batchId, false, null);
             $fileId = fileModel::where('fileName', '=', $pdfDefaultFileName.'.pdf')
@@ -86,8 +91,8 @@ class htmltopdfController extends Controller
                 'urlName' => $request->post('urlToPDF'),
                 'urlMargin' => $pdfMargin,
                 'urlOrientation' => $pdfOrientation,
-                'urlSinglePage' => null,
-                'urlSize' => null,
+                'urlSinglePage' => $pdfSinglePage,
+                'urlSize' => $pdfSize,
                 'result' => false,
                 'isDeleted' => false,
                 'fileId' => $fileId,
@@ -132,106 +137,30 @@ class htmltopdfController extends Controller
                     );
                 }
             }
-            $asposeToken = AppHelper::instance()->getAsposeToken(env('ASPOSE_CLOUD_CLIENT_ID'), env('ASPOSE_CLOUD_TOKEN'));
-            if ($asposeToken) {
-                try {
-                   $isLandscape = ($pdfOrientation === 'landscape') ? 'true' : 'false';
-                   $asposeAPI = Http::timeout(300)
-                    ->withToken($asposeToken)
-                    ->withHeaders([
-                        'Accept' => 'application/json',
-                    ])
-                    ->withOptions([
-                        'query' => [
-                            'url'    => $newUrl,
-                            'isLandscape' => $isLandscape,
-                            'marginLeft'    => $pdfMargin,
-                            'marginRight'   => $pdfMargin,
-                            'marginTop'     => $pdfMargin,
-                            'marginBottom'  => $pdfMargin,
-                        ],
-                    ])
-                    ->get("https://api.aspose.cloud/v3.0/pdf/create/web");
-                    if ($asposeAPI->successful()) {
-                        $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
-                        $duration = $end->diff($startProc);
-                        Storage::disk('minio')->put(
-                            $pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf',
-                            $asposeAPI->body()
-                        );
-                    } else {
-                        $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
-                        $duration = $end->diff($startProc);
-                        appLogModel::where('groupId', '=', $batchId)
-                            ->update([
-                                'errReason' => $asposeAPI->body(),
-                                'errStatus' => 'Aspose API v3.0 - html failure'
-                            ]);
-                        htmlModel::where('groupId', '=', $batchId)
-                            ->update([
-                                'result' => false,
-                                'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
-                                'procDuration' => $duration->s.' seconds'
-                            ]);
-                        NotificationHelper::Instance()->sendErrNotify(
-                            $pdfDefaultFileName.'.pdf',
-                            null,
-                            $batchId,
-                            'FAIL',
-                            'htmltopdf',
-                            'Aspose API v3.0 - html failure',
-                            $asposeAPI->body()
-                        );
-                        return $this->returnDataMessage(
-                            400,
-                            'PDF Convert failed !',
-                            null,
-                            $asposeAPI->body(),
-                            null,
-                            $batchId,
-                            'Aspose API v3.0 - html failure'
-                        );
-                    }
-                } catch (\Exception $e) {
-                    $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
-                    $duration = $end->diff($startProc);
-                    appLogModel::where('groupId', '=', $batchId)
-                        ->update([
-                            'errReason' => $e->getMessage(),
-                            'errStatus' => 'Guzzle HTTP failure'
-                        ]);
-                    htmlModel::where('groupId', '=', $batchId)
-                        ->update([
-                            'result' => false,
-                            'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
-                            'procDuration' => $duration->s.' seconds'
-                        ]);
-                    NotificationHelper::Instance()->sendErrNotify(
-                        $pdfDefaultFileName.'.pdf',
-                        null,
-                        $batchId,
-                        'FAIL',
-                        'htmltopdf',
-                        'Guzzle HTTP failure',
-                        $e->getMessage()
-                    );
-                    return $this->returnDataMessage(
-                        400,
-                        'PDF Convert failed !',
-                        null,
-                        $e->getMessage(),
-                        null,
-                        $batchId,
-                        'Guzzle HTTP failure'
-                    );
+            try {
+                $ilovepdfTask = new HtmlpdfTask(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
+                $ilovepdfTask->setEncryptKey($pdfEncKey);
+                $ilovepdfTask->setEncryption(true);
+                $pdfFile = $ilovepdfTask->addUrl($newUrl);
+                $ilovepdfTask->setPageOrientation($pdfOrientation);
+                $ilovepdfTask->setPageMargin($pdfMargin);
+                $ilovepdfTask->setPageSize($pdfSize);
+                if ($pdfSinglePage == 'true') {
+                    $ilovepdfTask->setSinglePage(true);
+                } else {
+                    $ilovepdfTask->setSinglePage(false);
                 }
-            } else {
+                $ilovepdfTask->setOutputFileName($pdfDefaultFileName);
+                $ilovepdfTask->execute();
+                $ilovepdfTask->download(Storage::disk('local')->path($pdfProcessed_Location));
+                $ilovepdfTask->delete();
+            } catch (\Exception $e) {
                 $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                 $duration = $end->diff($startProc);
                 appLogModel::where('groupId', '=', $batchId)
                     ->update([
-                        'errReason' => $message->getMessage(),
-                        'errStatus' => 'Failed to generated Aspose Token !'
+                        'errReason' => $e->getMessage(),
+                        'errStatus' => 'iLovePDF API Error !, Catch on Exception'
                     ]);
                 htmlModel::where('groupId', '=', $batchId)
                     ->update([
@@ -240,27 +169,32 @@ class htmltopdfController extends Controller
                         'procDuration' => $duration->s.' seconds'
                     ]);
                 NotificationHelper::Instance()->sendErrNotify(
-                    $currentFileName,
+                    $pdfUrl,
                     null,
                     $batchId,
                     'FAIL',
                     'htmltopdf',
-                    'Failed to generated Aspose Token !',
-                    'Aspose API v3.0 - html failure'
+                    'iLovePDF API Error !, Catch on Exception',
+                    $e->getMessage()
                 );
                 return $this->returnDataMessage(
                     400,
-                    'PDF Convert failed !',
+                    'HTML To PDF failed !',
                     null,
-                    null,
+                    $e->getMessage(),
                     null,
                     $batchId,
-                    'Failed to generated Aspose Token !'
+                    'iLovePDF API Error !, Catch on Exception'
                 );
             }
-            if (Storage::disk('minio')->exists($pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf')) {
+            if (Storage::disk('local')->exists($pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf')) {
                 $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                 $duration = $end->diff($startProc);
+                Storage::disk('minio')->put(
+                    $pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf',
+                    Storage::disk('local')->get($pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf')
+                );
+                Storage::disk('local')->delete($pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf');
                 $fileProcSize = Storage::disk('minio')->size($pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf');
                 appLogModel::where('groupId', '=', $batchId)
                             ->update([
@@ -299,7 +233,7 @@ class htmltopdfController extends Controller
                 appLogModel::where('groupId', '=', $batchId)
                     ->update([
                         'errReason' => null,
-                        'errStatus' => 'Failed to download file from S3 Object Storage !'
+                        'errStatus' => 'Failed to download file from iLovePDF API !'
                     ]);
                 htmlModel::where('groupId', '=', $batchId)
                     ->update([
@@ -312,7 +246,7 @@ class htmltopdfController extends Controller
                     null,
                     $batchId,
                     'FAIL',
-                    'Failed to download file from S3 Object Storage !',
+                    'Failed to download file from iLovePDF API !',
                     null
                 );
                 return $this->returnDataMessage(
@@ -322,7 +256,7 @@ class htmltopdfController extends Controller
                     null,
                     null,
                     $batchId,
-                    'Failed to download file from S3 Object Storage !'
+                    'Failed to download file from iLovePDF API !'
                 );
             }
         }
