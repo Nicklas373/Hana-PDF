@@ -1,11 +1,12 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "hana-ci/hana-pdf",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Laravel Project: Easily and quickly merge, split, compress, convert, and add watermarks to PDF documents",
     "keywords": [
         "laravel",
-        "framework"
+        "framework",
+        "iLovePDF"
     ],
     "license": "MIT",
     "require": {
