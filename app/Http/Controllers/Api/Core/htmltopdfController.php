@@ -104,14 +104,14 @@ class htmltopdfController extends Controller
                 'procDuration' => null
             ]);
             if (AppHelper::Instance()->checkWebAvailable($pdfUrl)) {
-                $newUrl = $pdfUrl;
+                $newUrl = 'https://'.$pdfUrl;
             } else {
                 if (AppHelper::Instance()->checkWebAvailable('https://'.$pdfUrl)) {
                     $newUrl = 'https://'.$pdfUrl;
                 } else if (AppHelper::Instance()->checkWebAvailable('http://'.$pdfUrl)) {
-                    $newUrl = 'http://'.$pdfUrl;
+                    $newUrl = 'https://'.$pdfUrl;
                 } else if (AppHelper::Instance()->checkWebAvailable('www.'.$pdfUrl)) {
-                    $newUrl = 'www.'.$pdfUrl;
+                    $newUrl = 'https://'.$pdfUrl;
                 } else {
                     $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
                     $duration = $end->diff($startProc);
