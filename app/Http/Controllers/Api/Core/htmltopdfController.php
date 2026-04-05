@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Ilovepdf\Ilovepdf;
@@ -104,38 +105,30 @@ class htmltopdfController extends Controller
                 'procDuration' => null
             ]);
             if (AppHelper::Instance()->checkWebAvailable($pdfUrl)) {
-                $newUrl = 'https://'.$pdfUrl;
+                $newUrl = 'https://'.AppHelper::Instance()->urlFormatter($pdfUrl);
             } else {
-                if (AppHelper::Instance()->checkWebAvailable('https://'.$pdfUrl)) {
-                    $newUrl = 'https://'.$pdfUrl;
-                } else if (AppHelper::Instance()->checkWebAvailable('http://'.$pdfUrl)) {
-                    $newUrl = 'https://'.$pdfUrl;
-                } else if (AppHelper::Instance()->checkWebAvailable('www.'.$pdfUrl)) {
-                    $newUrl = 'https://'.$pdfUrl;
-                } else {
-                    $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
-                    $duration = $end->diff($startProc);
-                    appLogModel::where('groupId', '=', $batchId)
-                        ->update([
-                            'errReason' => 'Webpage are not available or not valid: '.$pdfUrl,
-                            'errStatus' => '404'
-                        ]);
-                    htmlModel::where('groupId', '=', $batchId)
-                        ->update([
-                            'result' => false,
-                            'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
-                            'procDuration' => $duration->s.' seconds'
-                        ]);
-                    return $this->returnDataMessage(
-                        400,
-                        'HTML To PDF failed !',
-                        null,
-                        null,
-                        null,
-                        $batchId,
-                        'Webpage are not available or not valid: '.$pdfUrl
-                    );
-                }
+                $end = Carbon::parse(AppHelper::instance()->getCurrentTimeZone());
+                $duration = $end->diff($startProc);
+                appLogModel::where('groupId', '=', $batchId)
+                    ->update([
+                        'errReason' => 'Webpage are not available or not valid: '.$pdfUrl,
+                        'errStatus' => '404'
+                    ]);
+                htmlModel::where('groupId', '=', $batchId)
+                    ->update([
+                        'result' => false,
+                        'procEndAt' => AppHelper::instance()->getCurrentTimeZone(),
+                        'procDuration' => $duration->s.' seconds'
+                    ]);
+                return $this->returnDataMessage(
+                    400,
+                    'HTML To PDF failed !',
+                    null,
+                    null,
+                    null,
+                    $batchId,
+                    'Webpage are not available or not valid: '.$pdfUrl
+                );
             }
             try {
                 $ilovepdfTask = new HtmlpdfTask(env('ILOVEPDF_PUBLIC_KEY'),env('ILOVEPDF_SECRET_KEY'));
@@ -215,7 +208,7 @@ class htmltopdfController extends Controller
                 return $this->returnCoreMessage(
                     200,
                     'OK',
-                    $pdfUrl,
+                    $newUrl,
                     Storage::disk('minio')->temporaryUrl(
                         $pdfProcessed_Location.'/'.$pdfDefaultFileName.'.pdf',
                         now()->addMinutes(5)

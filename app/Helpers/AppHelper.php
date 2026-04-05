@@ -144,6 +144,10 @@ class AppHelper
         return $uniqueID->toString();
     }
 
+    function urlFormatter($url) {
+        return preg_replace('/https?:\/\/|www\./i', '', $url);
+    }
+
     public static function instance()
     {
          return new AppHelper();

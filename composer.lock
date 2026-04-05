@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "82b1ddc40c3d979e144d873ec999f722",
+    "content-hash": "f19215f7c90cef15008ea82271c52cc8",
     "packages": [
         {
             "name": "aspose-cloud/aspose-words-cloud",

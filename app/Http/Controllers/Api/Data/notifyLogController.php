@@ -89,6 +89,8 @@ class notifyLogController extends Controller
                         } else {
                             $filelog = null;
                         }
+                    } else {
+                        $filelog = null;
                     }
                 } else {
                     $applog = appLogModel::where('processId', $processId)->get();
@@ -115,6 +117,8 @@ class notifyLogController extends Controller
                         } else {
                             $filelog = null;
                         }
+                    } else {
+                        $filelog = null;
                     }
                 } else {
                     $applog = appLogModel::where('processId', $processId)->get();
@@ -141,6 +145,8 @@ class notifyLogController extends Controller
                         } else {
                             $filelog = null;
                         }
+                    } else {
+                        $filelog = null;
                     }
                 } else {
                     $applog = appLogModel::where('processId', $processId)->get();
@@ -168,6 +174,8 @@ class notifyLogController extends Controller
                         } else {
                             $filelog = null;
                         }
+                    } else {
+                        $filelog = null;
                     }
                 } else {
                     $applog = appLogModel::where('processId', $processId)->get();
@@ -194,6 +202,8 @@ class notifyLogController extends Controller
                         } else {
                             $filelog = null;
                         }
+                    } else {
+                        $filelog = null;
                     }
                 } else {
                     $applog = appLogModel::where('processId', $processId)->get();
@@ -220,6 +230,8 @@ class notifyLogController extends Controller
                         } else {
                             $filelog = null;
                         }
+                    } else {
+                        $filelog = null;
                     }
                 } else {
                     $applog = appLogModel::where('processId', $processId)->get();
