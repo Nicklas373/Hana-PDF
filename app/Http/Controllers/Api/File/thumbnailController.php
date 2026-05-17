@@ -11,7 +11,6 @@ use Illuminate\Validation\Rule;
 use PhpOffice\PhpWord\IOFactory as WordIOFactory;
 use PhpOffice\PhpWord\Settings;
 use PhpOffice\PhpSpreadsheet\IOFactory as SpreadsheetIOFactory;
-use PhpOffice\PhpPresentation\IOFactory as PresentationIOFactory;
 use Spatie\PdfToImage\Pdf;
 use Mpdf\Mpdf;
 use RecursiveDirectoryIterator;
