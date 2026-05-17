@@ -1,5 +1,5 @@
-# Use php:8.5-fpm-alpine3.22 as base image
-FROM php:8.5-fpm-alpine3.22
+# Use php:8.5.6-fpm-alpine3.23 as base image
+FROM php:8.5.6-fpm-alpine3.23
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
