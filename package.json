@@ -16,5 +16,8 @@
     "dependencies": {
         "dropzone": "^6.0.0-beta.2",
         "flowbite": "^2.5.1"
+    },
+    "allowScripts": {
+        "fsevents@2.3.3": true
     }
 }
