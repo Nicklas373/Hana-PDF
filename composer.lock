@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "517639183cb7238e87aa4675a257817a",
+    "content-hash": "c88caa8fb212420818af343214b5e0c6",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -1381,16 +1381,16 @@
         },
         {
             "name": "ilovepdf/ilovepdf-php",
-            "version": "v1.4.1",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ilovepdf/ilovepdf-php.git",
-                "reference": "23777e2bd900fce9f52185c10624927a054a8296"
+                "reference": "bb23c6095d9327288c2982e36657db9bcfe1ca84"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ilovepdf/ilovepdf-php/zipball/23777e2bd900fce9f52185c10624927a054a8296",
-                "reference": "23777e2bd900fce9f52185c10624927a054a8296",
+                "url": "https://api.github.com/repos/ilovepdf/ilovepdf-php/zipball/bb23c6095d9327288c2982e36657db9bcfe1ca84",
+                "reference": "bb23c6095d9327288c2982e36657db9bcfe1ca84",
                 "shasum": ""
             },
             "require": {
@@ -1404,6 +1404,7 @@
                 "phpunit/phpunit": "^9.5",
                 "vimeo/psalm": "^6.0"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -1424,10 +1425,10 @@
             "homepage": "https://ilovepdf.com/",
             "support": {
                 "issues": "https://github.com/ilovepdf/ilovepdf-php/issues",
-                "source": "https://github.com/ilovepdf/ilovepdf-php/tree/v1.4.1"
+                "source": "https://github.com/ilovepdf/ilovepdf-php/tree/master"
             },
-            "time": "2026-07-22T12:08:24+00:00",
-            "published-time": "2026-07-22T12:10:28+00:00"
+            "time": "2026-11-05T07:14:17+00:00",
+            "published-time": "2026-11-05T07:14:22+00:00"
         },
         {
             "name": "irazasyed/telegram-bot-sdk",
@@ -10680,6 +10681,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "ilovepdf/ilovepdf-php": 20,
         "phpoffice/phpspreadsheet": 20,
         "phpoffice/phpword": 20
     },
