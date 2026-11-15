@@ -9,71 +9,93 @@ LABEL description="Docker container for https://gw.hana-ci.com"
 # Configure work directory
 WORKDIR /var/www/html
 
-# Configure timezone
+# Set timezone
 ENV TZ="Asia/Jakarta"
-RUN apk add --no-cache tzdata && \
-    cp /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && \
-    echo "Asia/Jakarta" > /etc/timezone
 
-# Configure initial packages
-RUN apk add --no-cache \
-    curl \
-    unzip \
-    git \
-    libzip-dev \
-    freetype-dev \
-    imagemagick-dev \
-    libjpeg-turbo-dev \
-    libpng-dev \
-    ghostscript \
-    autoconf \
-    build-base \
-    postgresql-dev \
-    libsodium-dev \
-    supervisor \
-    nginx \
-    bash \
-    busybox-suid \
-    nano
-
-# Install Imagick extension
-RUN cd /tmp && curl -L -o /tmp/imagick.tar.gz https://pecl.php.net/get/imagick-3.8.1.tgz \
-    && tar --strip-components=1 -xf /tmp/imagick.tar.gz \
-    && phpize \
-    && ./configure \
-    && make \
-    && make install \
-    && echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini \
-    && rm -rf /tmp/*
+# Install required packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        tzdata \
+        curl \
+        unzip \
+        git \
+        libzip-dev \
+        libfreetype6-dev \
+        libmagickwand-dev \
+        imagemagick \
+        libjpeg62-turbo-dev \
+        libpng-dev \
+        ghostscript \
+        autoconf \
+        build-essential \
+        pkg-config \
+        libpq-dev \
+        libsodium-dev \
+        supervisor \
+        nginx && \
+    ln -snf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && \
+    echo "Asia/Jakarta" > /etc/timezone && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install -j$(nproc) gd zip pdo_pgsql ftp sodium
+RUN docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg && \
+    docker-php-ext-install -j"$(nproc)" \
+        gd \
+        zip \
+        pdo_pgsql \
+        ftp \
+        sodium
+
+# Install Imagick extension
+RUN cd /tmp && \
+    curl -fsSL \
+        https://pecl.php.net/get/imagick-3.8.1.tgz \
+        -o imagick.tar.gz && \
+    mkdir imagick-src && \
+    tar --strip-components=1 -xf imagick.tar.gz -C imagick-src && \
+    cd imagick-src && \
+    phpize && \
+    ./configure && \
+    make -j"$(nproc)" && \
+    make install && \
+    echo "extension=imagick.so" \
+        > /usr/local/etc/php/conf.d/ext-imagick.ini && \
+    cd / && \
+    rm -rf /tmp/imagick.tar.gz /tmp/imagick-src
 
 # Clone App Services
-RUN git clone -b dev/be/master https://github.com/Nicklas373/Hana-PDF hanaci-api
+RUN git clone \
+    --branch dev/be/master \
+    --single-branch \
+    https://github.com/Nicklas373/Hana-PDF \
+    hanaci-api
 
 # Configure Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN cd hanaci-api && composer install --no-interaction --no-scripts --no-progress --prefer-dist
+RUN curl -fsSL https://getcomposer.org/installer | \
+    php -- --install-dir=/usr/local/bin --filename=composer
+RUN cd hanaci-api && \
+    composer install \
+        --no-interaction \
+        --no-scripts \
+        --no-progress \
+        --prefer-dist
 
 # Configure App Service
 COPY module/php/php.ini /usr/local/etc/php/conf.d/99-hana.ini
-RUN cd hanaci-api && \
-    mkdir -p hanaci-api/storage/app/public/batch && \
-    mkdir -p hanaci-api/storage/app/public/download && \
-    mkdir -p hanaci-api/storage/app/public/image && \
-    mkdir -p hanaci-api/storage/app/public/pool && \
-    mkdir -p hanaci-api/storage/app/public/upload
-RUN cd hanaci-api && cp .env.example .env
-RUN cd hanaci-api && \
+RUN cp hanaci-api/.env.example hanaci-api/.env && \
+    cd hanaci-api && \
+    mkdir -p \
+        storage/app/private/batch \
+        storage/app/private/download \
+        storage/app/private/image \
+        storage/app/private/pool \
+        storage/app/private/upload && \
     php artisan key:generate --no-interaction --quiet && \
-    php artisan jwt:secret --no-interaction --quiet && \
     php artisan storage:link --no-interaction --quiet && \
     php artisan config:cache --quiet && \
     php artisan config:clear --quiet
-RUN cd hanaci-api && chmod o+w /var/www/html/hanaci-api/storage/ -R
-RUN cd hanaci-api && chmod o+w /var/www/html/hanaci-api/vendor/mpdf/mpdf/tmp/ -R
 
 # Configure Laravel Env
 RUN cd hanaci-api && echo "" >> .env
@@ -112,21 +134,25 @@ RUN cd hanaci-api && echo "JWT_ALGO=HS256" >> .env
 
 # Configure permission
 RUN cd hanaci-api && \
-    chmod o+w /var/www/html/hanaci-api/storage/ -R && \
-    chmod o+w /var/www/html/hanaci-api/vendor/mpdf/mpdf/tmp/ -R
+    chmod -R o+w storage/ && \
+    chmod -R o+w vendor/mpdf/mpdf/tmp/
 
-# Configure Nginx Services
-RUN mkdir /etc/nginx/sites-enabled
+#  Configure nginx instances
+RUN mkdir -p /etc/nginx/sites-enabled
 COPY module/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY module/nginx/sites-available/api-hanaci.conf /etc/nginx/sites-available/api-hanaci.conf
-RUN ln -s /etc/nginx/sites-available/api-hanaci.conf /etc/nginx/sites-enabled/
+COPY module/nginx/sites-available/api-hanaci.conf \
+    /etc/nginx/sites-available/api-hanaci.conf
+RUN ln -s \
+    /etc/nginx/sites-available/api-hanaci.conf \
+    /etc/nginx/sites-enabled/api-hanaci.conf
+
+# Configure Supervisor
+COPY module/instance/supervisord.conf \
+    /etc/supervisor/conf.d/supervisord.conf
 
 # Set up cron job for Laravel scheduler
 COPY module/hanaci/hanaci-api/api-cron /etc/crontabs/root
 RUN touch /var/log/cron.log && chmod 0644 /var/log/cron.log
-
-# Configure supervisord
-COPY module/instance/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose necessary ports
 EXPOSE 80 9000
