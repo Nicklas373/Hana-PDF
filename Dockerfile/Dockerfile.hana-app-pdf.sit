@@ -1,55 +1,63 @@
-# Use php:8.5.6-fpm-alpine3.23 as base image
-FROM php:8.5.6-fpm-alpine3.23
+# Use php:8.5.12-fpm-trixie as base image
+FROM php:8.5.12-fpm-trixie
 
 # Configure image maintainer
 LABEL maintainer="Nicklas373 <herlambangdicky5@gmail.com>"
-LABEL version="1.9"
+LABEL version="2.0"
 LABEL description="Docker application image for HANA PDF Apps"
 
 # Configure work directory
 WORKDIR /var/www/html
 
-# Configure timezone
-RUN apk update && \
-    apk add --no-cache tzdata && \
-    cp /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && \
-    echo "Asia/Jakarta" > /etc/timezone
+# Set timezone
+ENV TZ="Asia/Jakarta"
 
-# Configure initial packages
-RUN apk add --no-cache \
-    curl \
-    unzip \
-    git \
-    libzip-dev \
-    libpq-dev \
-    postgresql-dev \
-    supervisor \
-    nginx \
-    bash \
-    busybox-suid \
-    nano
+# Install required packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        tzdata \
+        curl \
+        unzip \
+        git \
+        libzip-dev \
+        libpq-dev \
+        supervisor \
+        nginx && \
+    ln -snf /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && \
+    echo "Asia/Jakarta" > /etc/timezone && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install -j$(nproc) pdo_pgsql
+RUN docker-php-ext-install -j"$(nproc)" pdo_pgsql
 
 # Clone App Services
-RUN git clone -b dev/fe/master-live https://github.com/Nicklas373/Hana-PDF hanaci-pdf
+RUN git clone \
+    --branch dev/fe/master-live \
+    --single-branch \
+    https://github.com/Nicklas373/Hana-PDF \
+    hanaci-pdf
 
 # Configure Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN cd hanaci-pdf && composer install --no-interaction --no-scripts --no-progress --prefer-dist
+RUN curl -fsSL https://getcomposer.org/installer | \
+    php -- --install-dir=/usr/local/bin --filename=composer
+RUN cd hanaci-pdf && \
+    composer install \
+        --no-interaction \
+        --no-scripts \
+        --no-progress \
+        --prefer-dist
 
 # Configure App Service
 COPY module/php/php.ini /usr/local/etc/php/conf.d/99-hana.ini
-RUN cd hanaci-pdf && cp .env.example .env
 RUN cd hanaci-pdf && \
-    php artisan key:generate && \
+    cp .env.example .env && \
+    php artisan key:generate --no-interaction && \
     php artisan config:cache && \
     php artisan config:clear
 
-# Configure permission
+# Configure permissions
 RUN cd hanaci-pdf && \
-    chmod o+w /var/www/html/hanaci-pdf/storage/ -R
+    chmod -R o+w storage/
 
 # Configure Laravel Env
 RUN cd hanaci-pdf && echo "VITE_ADOBE_CLIENT_ID=xxxx" >> .env
@@ -66,7 +74,7 @@ RUN cd hanaci-pdf && echo "TELEGRAM_BOT_ID=xxxx" >> .env
 RUN cd hanaci-pdf && echo "TELEGRAM_CHAT_ID=xxxx" >> .env
 
 # Configure nginx instances
-RUN mkdir /etc/nginx/sites-enabled
+RUN mkdir -p /etc/nginx/sites-enabled
 COPY module/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY module/nginx/sites-available/pdf-hanaci.conf /etc/nginx/sites-available/pdf-hanaci.conf
 RUN ln -s /etc/nginx/sites-available/pdf-hanaci.conf /etc/nginx/sites-enabled/
