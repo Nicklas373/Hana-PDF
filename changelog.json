@@ -1,5 +1,13 @@
 [
   {
+    "release_date": "November, 15 2026",
+    "version": "3.5.1",
+    "changelog": [
+      "Restore material-tailwind capatibilites (UI Element)",
+      "Updating our internal libraries and instances to latest version"
+    ]
+  },
+  {
     "release_date": "April, 04 2026",
     "version": "3.5.0",
     "changelog": [
